@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>First contact between the two clans, 2026-11-11 · bitsoup lab</title>
+<meta name="description" content="bitsoup: machine evolution without a fitness function. Experiments, cluster telemetry and lab journal.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="../days/index.html">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="index.html" aria-current="page">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<p class="crumbs"><a href="index.html">Methods</a> / first-contact</p>
+<h1>First contact between the two clans, 2026-11-11</h1>
+<nav class="toc" aria-label="On this page"><a href="#the-short-answer">The short answer</a><a href="#1-who-arrived-first">1. Who arrived first</a><a href="#2-where-everybody-is">2. Where everybody is</a><a href="#3-what-happens-to-an-arrival">3. What happens to an arrival</a><a href="#4-why-the-line-moves">4. Why the line moves</a><a href="#what-this-does-not-show">What this does not show</a></nav>
+<article class="prose"><p>About 17 hours after the start the two clans had met. The meeting was one-sided: 565,000 organisms of the rig A clan lived on rig B, and not one organism of the rig B clan lived on rig A. This note records why, with the data. The tools used are in <code>world/</code>: <code>census.js</code>, <code>boundary.js</code>, <code>inspect.js</code> and <code>fate.js</code>.</p>
+<h2 id="the-short-answer">The short answer</h2>
+<ol>
+<li><strong>The rig A clan got to the border first, because its rig is faster.</strong> It then settled the empty land on the far side before the local clan arrived there.</li>
+<li><strong>The rig B clan never reached the border.</strong> About 10 columns of the other clan lie in between. The travellers that arrive on rig A from rig B are rig A organisms coming back.</li>
+<li><strong>Settled land is hard to enter.</strong> An arrival leaves about half as many descendants as a resident, so whoever settles first keeps the land unless the newcomer is clearly stronger.</li>
+<li><strong>At the contact line the rig A clan is stronger, and it is advancing.</strong> Its leading organisms all carry <code>travel</code> and hold both speech tasks. The regions facing them hold few speakers. The line moves east by about a quarter of a column per round.</li>
+</ol>
+<p>Points 1 and 2 are firmly supported. Points 3 and 4 are measured on a small sample, described below.</p>
+<h2 id="1-who-arrived-first">1. Who arrived first</h2>
+<p>Both clans started 100 columns from the border and spread about one column per round. In rounds they would have reached the border at the same time, near round 102. But a round is per rig, and rig A ran its early rounds about twice as fast in real time.</p>
+<p>From rig B's log:</p>
+<table>
+<thead>
+<tr><th class="num">rig B round</th><th class="num">inhabited regions</th><th class="num">organisms of the rig A clan there</th></tr>
+</thead>
+<tbody>
+<tr><td class="num">80</td><td class="num">12,009</td><td class="num">0</td></tr>
+<tr><td class="num">86</td><td class="num">13,942</td><td class="num">346</td></tr>
+<tr><td class="num">96</td><td class="num">17,622</td><td class="num">53,009</td></tr>
+<tr><td class="num">120</td><td class="num">27,596</td><td class="num">268,907</td></tr>
+<tr><td class="num">144</td><td class="num">38,674</td><td class="num">553,033</td></tr>
+</tbody>
+</table>
+<p>The first rig A organisms appeared at rig B's round 86. At that round the local clan's own front was about 16 columns short of the border. The newcomers spread east into empty land, the locals spread west, and they met near column 6154, about 10 columns inside rig B's band.</p>
+<h2 id="2-where-everybody-is">2. Where everybody is</h2>
+<p>From rig B's checkpoint at round 140, column by column from the border at 6144:</p>
+<table>
+<thead>
+<tr><th>column</th><th class="num">rig A clan</th><th class="num">rig B clan</th></tr>
+</thead>
+<tbody>
+<tr><td>6144 to 6152</td><td class="num">100%</td><td class="num">0%</td></tr>
+<tr><td>6153</td><td class="num">92%</td><td class="num">8%</td></tr>
+<tr><td>6154</td><td class="num">70%</td><td class="num">30%</td></tr>
+<tr><td>6155</td><td class="num">25%</td><td class="num">75%</td></tr>
+<tr><td>6156</td><td class="num">5%</td><td class="num">95%</td></tr>
+<tr><td>6157</td><td class="num">2%</td><td class="num">98%</td></tr>
+<tr><td>6158 onward</td><td class="num">0%</td><td class="num">100%</td></tr>
+</tbody>
+</table>
+<p>Only 65 of the 36,754 inhabited regions held both clans. On rig A's side every one of 46,447 regions was pure rig A clan.</p>
+<h2 id="3-what-happens-to-an-arrival">3. What happens to an arrival</h2>
+<p>Experiment on copies of 10 real regions along row 2048, columns 6150 to 6159. For each region its four real neighbours ran one round, the travellers they sent towards it were put in, and the region ran one round. Counted are descendants per head after that round, including those that moved on.</p>
+<table>
+<thead>
+<tr><th>who</th><th>rule for the age of an arrival</th><th class="num">descendants per head</th></tr>
+</thead>
+<tbody>
+<tr><td>a resident</td><td></td><td class="num">1.59</td></tr>
+<tr><td>an arrival</td><td>as in the world: as old as it left, plus the births it missed on the road</td><td class="num">0.77</td></tr>
+<tr><td>an arrival</td><td>as old as it left</td><td class="num">2.56</td></tr>
+<tr><td>an arrival</td><td>counted as newborn</td><td class="num">3.68</td></tr>
+</tbody>
+</table>
+<p>Under the world's rules an arrival does half as well as a resident. Under either looser rule it does much better than a resident, which is why everything became a nomad before those rules existed.</p>
+<h2 id="4-why-the-line-moves">4. Why the line moves</h2>
+<p>A patch of 12 by 5 real regions around the line, columns 6149 to 6160:</p>
+<table>
+<thead>
+<tr><th class="num">column</th><th>clan</th><th class="num">organisms</th><th class="num">mean merit</th><th class="num">hold <code>tell</code></th><th class="num">code has <code>travel</code></th></tr>
+</thead>
+<tbody>
+<tr><td class="num">6150</td><td>rig A</td><td class="num">2,785</td><td class="num">19.0</td><td class="num">58%</td><td class="num">14%</td></tr>
+<tr><td class="num">6154</td><td>rig A</td><td class="num">1,605</td><td class="num">21.1</td><td class="num">67%</td><td class="num">14%</td></tr>
+<tr><td class="num">6154</td><td>rig B</td><td class="num">954</td><td class="num">5.9</td><td class="num">15%</td><td class="num">1%</td></tr>
+<tr><td class="num">6156</td><td>rig A</td><td class="num">1,068</td><td class="num">24.1</td><td class="num">74%</td><td class="num">60%</td></tr>
+<tr><td class="num">6156</td><td>rig B</td><td class="num">1,323</td><td class="num">2.2</td><td class="num">0%</td><td class="num">2%</td></tr>
+<tr><td class="num">6158</td><td>rig A</td><td class="num">268</td><td class="num">31.7</td><td class="num">99%</td><td class="num">100%</td></tr>
+<tr><td class="num">6158</td><td>rig B</td><td class="num">2,028</td><td class="num">12.9</td><td class="num">38%</td><td class="num">2%</td></tr>
+<tr><td class="num">6160</td><td>rig B</td><td class="num">2,213</td><td class="num">9.5</td><td class="num">25%</td><td class="num">2%</td></tr>
+</tbody>
+</table>
+<p>The further east a rig A organism is, the more likely it carries <code>travel</code> and holds both speech tasks. Merit is a multiplier on turns, so at the leading edge a rig A organism gets several times the turns of the residents it meets. That outweighs the handicap of arriving.</p>
+<p>The movement, measured between two checkpoints of the live world:</p>
+<table>
+<thead>
+<tr><th></th><th class="num">round 140</th><th class="num">round 146</th></tr>
+</thead>
+<tbody>
+<tr><td>mean depth of the rig A clan, in regions</td><td class="num">10.14</td><td class="num">10.71</td></tr>
+<tr><td>its share in column 6155</td><td class="num">25%</td><td class="num">41%</td></tr>
+<tr><td>its share in column 6156</td><td class="num">5%</td><td class="num">27%</td></tr>
+<tr><td>its share in column 6157</td><td class="num">2%</td><td class="num">15%</td></tr>
+<tr><td>regions with both clans</td><td class="num">65</td><td class="num">102</td></tr>
+</tbody>
+</table>
+<p>In the 41 central rows the clan gained 1.63 regions in 6 rounds. It advanced in 54 rows and retreated in 13. Replaying the patch on the PC for 20 rounds gave the same direction: three mixed columns became entirely rig A.</p>
+<h2 id="what-this-does-not-show">What this does not show</h2>
+<ul>
+<li><strong>Why the border regions of the rig B clan are weak.</strong> It may be chance. Region to region the differences are large in both clans: one rig B region 36 columns from the border is entirely travellers with full merit, and some rig A regions hold no travellers at all.</li>
+<li><strong>That the rig A clan is better overall.</strong> Deep inside both territories about 40 to 65% hold <code>tell</code>.</li>
+<li><strong>That the advance will continue.</strong> Six rounds is a short measurement.</li>
+<li>The patch files were copied from a running rig. Most were from round 140 and a few were some rounds newer.</li>
+<li>The replay on the PC loses travellers at the patch's east and west edges, which favours whoever is nearer the edge.</li>
+<li>The head start itself is an accident of hardware: with rigs of equal speed the clans would have met at the border.</li>
+</ul>
+</article>
+<p class="note">From the project's notes, as committed. Names of machines are replaced and lines about how they are reached are left out.</p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="../data/index.html">data</a> · <a href="index.html">methods</a></footer>
+</body></html>

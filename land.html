@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The land · bitsoup lab</title>
+<meta name="description" content="The running world, region by region: by diet, by clan, by reserve, over time, and one region byte by byte.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<meta http-equiv="refresh" content="600">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/site.css?v=9962f7db"><script defer src="assets/site.js?v=9962f7db"></script></head>
+<body data-live>
+<header class="top"><a class="brand" href="index.html">bitsoup <span>lab</span></a>
+<nav><a href="index.html">Overview</a><a href="days/index.html">Days</a><a href="experiments/index.html">Experiments</a><a href="land.html" aria-current="page">Land</a><a href="claims.html">Claims</a><a href="search/index.html">Search</a><a href="cluster.html">Cluster</a><a href="journal.html">Journal</a><a href="methods/index.html">Methods</a><a href="data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<h1>The land</h1>
+<p class="lede">The running world as the view of the project paints it: one square per region, coloured by what lives there. Every processor and every graphics card of the two machines holds a band of the land, seven bands side by side that close into a ring of 560 columns and 512 rows; the thin lines are the borders between them, where organisms cross from one band into the next.</p>
+<h2 id="film">The land over time</h2>
+<figure class="map film"><video controls muted loop playsinline preload="metadata" poster="land/film-poster.png" width="1120" height="1024"><source src="land/film.mp4" type="video/mp4">The film needs a browser that plays MP4.</video><figcaption>The sun world, fifth start, by what they live on, from Nov 12 16:20 UTC to Nov 13 13:22 UTC: 12 frames, one for every copy of the nodes' maps, which the tracker keeps every 30 minutes; four frames a second. Columns 0 to 559, rows 0 to 511.<ul class="swatches"><li><i style="background:rgb(70,210,90)"></i>plants only</li><li><i style="background:rgb(250,220,70)"></i>plants that also eat</li><li><i style="background:rgb(255,70,60)"></i>eaters only</li><li><i style="background:rgb(90,130,255)"></i>neither</li></ul></figcaption></figure>
+<h2 id="stills">The land now</h2>
+<p class="lede">From the census each node stores at a checkpoint, every two hours, and at a stop: all seven bands, stored between Nov 13 13:28 UTC and Nov 13 13:34 UTC. So these pictures are as old as that, unlike the film.</p>
+<h3 id="diet">By what they live on</h3>
+<p>Plants, eaters, plants that eat, neither, mixed in each region by their numbers; brighter where more live.</p>
+<div class="pair"><figure class="map"><img src="land/diet-whole.png" width="1120" height="1024" alt="The inhabited land, by what they live on" loading="eager"><figcaption>All of the inhabited land, a square of 2 by 2 pixels per region.<ul class="swatches"><li><i style="background:rgb(70,210,90)"></i>plants only</li><li><i style="background:rgb(250,220,70)"></i>plants that also eat</li><li><i style="background:rgb(255,70,60)"></i>eaters only</li><li><i style="background:rgb(90,130,255)"></i>neither</li></ul></figcaption></figure><figure class="map"><img src="land/diet-contact.png" width="800" height="600" alt="Where clans meet, by what they live on" loading="lazy"><figcaption>Where clans meet, around the middle of the regions that hold more than one: 160 by 120 regions, 5 by 5 pixels each.</figcaption></figure></div>
+<h3 id="clan">By clan</h3>
+<p>Not drawn for this start yet: the view has colours for four clans, and this world has seven, one for the founder of every band.</p>
+<h3 id="reserve">By reserve</h3>
+<p>The energy an organism holds in reserve, on average in its region, on a logarithmic scale.</p>
+<div class="pair"><figure class="map"><img src="land/reserve-whole.png" width="1120" height="1024" alt="The inhabited land, by reserve" loading="lazy"><figcaption>All of the inhabited land, a square of 2 by 2 pixels per region.<ul class="swatches"><li><i style="background:rgb(45,25,95)"></i>little in reserve</li><li><i style="background:rgb(150,35,125)"></i></li><li><i style="background:rgb(235,70,50)"></i></li><li><i style="background:rgb(255,170,40)"></i></li><li><i style="background:rgb(255,245,170)"></i>a lot: a million flips per organism or more</li></ul></figcaption></figure><figure class="map"><img src="land/reserve-contact.png" width="800" height="600" alt="Where clans meet, by reserve" loading="lazy"><figcaption>Where clans meet, around the middle of the regions that hold more than one: 160 by 120 regions, 5 by 5 pixels each.</figcaption></figure></div>
+<h2 id="up-close">A region up close</h2>
+<p class="lede">One region is 65,536 bytes. Here they are folded into a square so that bytes that follow each other in memory lie next to each other in the picture: every organism is a compact body, coloured by what it lives on, each with its own shade and a dark first byte. Dead bodies are brown, free memory is dark. These are the most populated regions of each rig in the sample of region files taken at the clean stop of 16:00 UTC on 11 November 2026.</p>
+<div class="pair"><figure class="map"><img src="land/region-rig-a.png" width="512" height="512" alt="One region of rig A, byte by byte" loading="lazy"><figcaption>Rig A, the region at column 5,967, row 1,437, as stored at Nov 11 16:01 UTC.<ul class="swatches"><li><i style="background:rgb(70,210,90)"></i>plants only</li><li><i style="background:rgb(250,220,70)"></i>plants that also eat</li><li><i style="background:rgb(255,70,60)"></i>eaters only</li><li><i style="background:rgb(90,130,255)"></i>neither</li></ul></figcaption></figure><figure class="map"><img src="land/region-rig-b.png" width="512" height="512" alt="One region of rig B, byte by byte" loading="lazy"><figcaption>Rig B, the region at column 6,279, row 1,476, as stored at Nov 11 16:04 UTC.<ul class="swatches"><li><i style="background:rgb(70,210,90)"></i>plants only</li><li><i style="background:rgb(250,220,70)"></i>plants that also eat</li><li><i style="background:rgb(255,70,60)"></i>eaters only</li><li><i style="background:rgb(90,130,255)"></i>neither</li></ul></figcaption></figure></div>
+<p class="note">Drawn with the view's own code, so the colours here are the colours of the view and of the nodes' maps.</p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="data/index.html">data</a> · <a href="methods/index.html">methods</a></footer>
+</body></html>

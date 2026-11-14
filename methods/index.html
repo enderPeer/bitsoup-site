@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Methods · bitsoup lab</title>
+<meta name="description" content="bitsoup: machine evolution without a fitness function. Experiments, cluster telemetry and lab journal.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="../days/index.html">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="index.html" aria-current="page">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<h1>Methods</h1>
+<article class="prose"><h2 id="how-the-numbers-get-here">How the numbers get here</h2>
+<ul>
+<li><strong>The nodes.</strong> Each rig runs one node of the world. After every round it writes its counts: organisms, regions, what they live on, who died of what, where the energy came from.</li>
+<li><strong>The sampler.</strong> A small program on each rig reads that status once a minute, together with the machine: CPU, memory, drives, temperatures and one query of the graphics cards. It writes one line a minute and keeps a copy of the node's map every 30 minutes. It only reads.</li>
+<li><strong>The collector.</strong> A PC pulls the lines, the maps and the nodes' logs, builds these pages and publishes them. The pages are as fresh as the last build, which is named at the foot of every page.</li>
+<li><strong>The journal.</strong> Starts, stops, deploys, crashes, findings and decisions are written down as they happen, one entry each, by whoever did them.</li>
+</ul>
+<h2 id="what-to-keep-in-mind">What to keep in mind</h2>
+<ul>
+<li><strong>Two clocks.</strong> The rigs do not wait for each other. Each counts its own rounds, and at any moment they are at different rounds, times of day and seasons. A chart by round shows two clocks, not one.</li>
+<li><strong>Before tracking began</strong>, on 11 November 2026 at 16:10 UTC, the history comes from the nodes' logs: one line a minute, with the round but without the time, and with fewer numbers.</li>
+<li><strong>A round on the charts is the world's clock</strong>: the rounds the world has run since it began. It is the same number as the node's own round, except after the unclean stops of 11 November 2026. Then a node took its round from its last checkpoint, but the regions kept the clock they were stored at, and the world went on from there: at 22:03 UTC rig A went on at round 426 by its own count and 451 on the charts, and rig B at 453 and 481. Since 12 November a node's own round follows the clock after an unclean stop as well. The journal keeps the rounds as the nodes wrote them, and their marks are placed on the charts' count. Until 13 November 2026 the charts drew a status one round to the left of where the node's log has it; the data files of that time count one less.</li>
+<li><strong>After a crash</strong> a rig goes on from its last stored state. If that state is older than the crash, the rounds since are run again, and the charts keep the later run.</li>
+<li><strong>Inside a rig a round is deterministic.</strong> The same configuration gives the same bytes, whichever engine computes a region. The world as a whole is not reproducible, because the moment a traveller from the other rig arrives depends on real time.</li>
+<li><strong>The cards are read at one moment a minute.</strong> A card that works 10 of every 50 seconds shows busy in one reading of five. Averages over an hour are right; a single reading is not.</li>
+<li><strong>Names.</strong> The machines are called rig A and rig B here. Rig A has an RTX 4090, an RTX 4080 and 12 CPU threads. Rig B has three RTX 3060 and 24 CPU threads.</li>
+</ul>
+<h2 id="what-is-not-measured-yet">What is not measured yet</h2>
+<p>The diversity of genomes, evolutionary activity, lineages and a measure of complexity are being built. The wear of the drives cannot be read, and the power drawn by the CPUs is not measured.</p>
+</article>
+<h2 id="documents">Documents</h2>
+<ul class="docs"><li><a href="sun-world.html">The sun world</a><p>The second world. It has a sun, seasons, temperature, plants, eating, the dead, infection and old age. First started on 2026-11-11 at 09:55 UTC, and started again the same day under corrected rules. The reason is in the review.</p></li><li><a href="world.html">The world</a><p>One world spread over both rigs. Organisms live in regions, move between them, and cross the network cable between the machines. This note says how the world is laid out and how it is run. The rules of life in it, light, eating and the dead, are in SUN.md. …</p></li><li><a href="engine.html">How a region is computed</a><p>Three engines compute a region. They give the same bytes, so the world does not depend on which one runs where.</p></li><li><a href="first-world.html">The first world</a><p>Kept for the record. This describes the first world, which ran from 2026-11-10 to 2026-11-11 09:50 UTC and is stopped. The world that runs now is described in docs/WORLD.md.</p></li><li><a href="first-contact.html">First contact between the two clans, 2026-11-11</a><p>About 17 hours after the start the two clans had met. The meeting was one-sided: 565,000 organisms of the rig A clan lived on rig B, and not one organism of the rig B clan lived on rig A. This note records why, with the data. The tools used are in world/: …</p></li><li><a href="guess.html">A guesser beside the exact search</a><p>The exact search and guess/ use 14 of bitsoup's instructions: arithmetic and logic on three registers ax, bx, cx and a stack of 10, with no jumps. A program starts with the inputs a in ax and b in bx, and its answer is what ax holds at the end.</p></li><li><a href="assay.html">The assay and the sandbox: what a genome does, and whether it is a parasite</a><p>Roadmap items 1.3 and 3.3, RELATED R2 (the three-tube test), published-work ideas 1 and 13, audit-rules idea 3, with the tubes and marks fixed in CLAIMS.md. Four read-only tools:</p></li></ul>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="../data/index.html">data</a> · <a href="index.html">methods</a></footer>
+</body></html>

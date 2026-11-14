@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How a region is computed · bitsoup lab</title>
+<meta name="description" content="bitsoup: machine evolution without a fitness function. Experiments, cluster telemetry and lab journal.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="../days/index.html">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="index.html" aria-current="page">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<p class="crumbs"><a href="index.html">Methods</a> / engine</p>
+<h1>How a region is computed</h1>
+<nav class="toc" aria-label="On this page"><a href="#a-region-as-packed-bytes">A region as packed bytes</a><a href="#one-result">One result</a><a href="#on-a-card">On a card</a><a href="#measured">Measured</a><a href="#what-was-tried-on-the-way">What was tried on the way</a></nav>
+<article class="prose"><p>Three engines compute a region. They give the same bytes, so the world does not depend on which one runs where.</p>
+<table>
+<thead>
+<tr><th>engine</th><th>where it runs</th><th>files</th><th>speed, one full region</th></tr>
+</thead>
+<tbody>
+<tr><td>JavaScript</td><td>nowhere in the live world. It is the definition of the rules</td><td><code>world/land.js</code> on top of <code>soup/alife.js</code></td><td>9 million instructions per second on one PC thread</td></tr>
+<tr><td>C on a CPU</td><td>the CPU workers</td><td><code>engine/soup.c</code> compiled to <code>engine/soup.wasm</code>, used through <code>world/fast.js</code> and <code>world/region.js</code></td><td>60 million on the same thread</td></tr>
+<tr><td>C on a graphics card</td><td>the card workers</td><td>the same <code>soup.c</code>, compiled for the card when a worker starts, by <code>gpu/host.py</code> through CuPy</td><td>see below: slow for one region, fast for thousands</td></tr>
+</tbody>
+</table>
+<p><code>soup.c</code> holds a region as one struct without pointers. <code>engine/soup.wasm</code> has tables for 8,192 bodies, which a region can never exceed. <code>engine/soup-gpu.wasm</code> is the same source with the small tables of the cards. It runs on a CPU and has exactly the layout of a region in video memory, so JavaScript uses it to write and read such regions.</p>
+<h2 id="a-region-as-packed-bytes">A region as packed bytes</h2>
+<p>Between two rounds a region is one piece of bytes, written by <code>r_pack</code> and read by <code>r_unpack</code> in <code>soup.c</code>:</p>
+<table>
+<thead>
+<tr><th>part</th><th>what</th></tr>
+</thead>
+<tbody>
+<tr><td>head</td><td>&quot;BSP1&quot;, the number of the rules, the size, how many living, how many dead</td></tr>
+<tr><td>numbers</td><td>the region's own counters and sums: its random stream, births, passes, pools, the energy ledger</td></tr>
+<tr><td>the living, in turn order</td><td>every number of the organism, its stack as far as it is used, its streaks if it has any, its debts</td></tr>
+<tr><td>the dead, oldest first</td><td>where the body lies, when it died, the energy in it</td></tr>
+<tr><td>the soup</td><td>65,536 bytes</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>The same region gives the same bytes</strong>, from the full-size tables, from the small ones and from a Land. That is what makes them the thing to compare, to store and to hand to a card.</li>
+<li><strong>What is left out is what can be rebuilt or is given anew:</strong> who owns which byte, the free slots, the numbers of the rules, and the sky, which the node sets every round.</li>
+<li>In the live world a packed region is 135 KB on average on rig A and 177 KB on rig B, at most 240 KB. Deflated for the file it is 29 and 39 KB, three quarters of what a stored Land took.</li>
+<li>A CPU worker never builds a Land. It unpacks a region into the engine, lets the engine run the whole round on it (arrivals, passes, report, leavers) and packs it again. A Land is built only to place a founder.</li>
+<li>Travellers go the same way: a batch is the engine's own records in a row (<code>world/batch.js</code>).</li>
+</ul>
+<h2 id="one-result">One result</h2>
+<pre><code class="language-bash">node engine/check.js 200 10              # on the PC or a rig: a few minutes
+node engine/golden.js                    # a fixed 3 by 3 world against engine/golden.json, every engine; names the first round and region that changed; --write after a deliberate rule change
+bash engine/native_check.sh              # on the PC: soup.c under ASan+UBSan on rig A, ~470 regions against soup-gpu.wasm byte for byte, ~6 minutes (docs/NATIVE_CHECK.md)
+bash engine/gputest/node_check.sh        # on a rig, inside bitsoup: a few minutes
+node world/test.js                       # the 18 checks of the world
+</code></pre>
+<ul>
+<li><code>check.js</code> runs small worlds five ways: everything in JavaScript, the passes in C, the whole round in C, the whole round in C with the small tables, and the whole round in C on regions that are kept packed and never as a Land. After every round every region's stored bytes, its report and every traveller's record must be identical, and the packed bytes must be the ones the JavaScript engine's region packs to. In its last long run 14,400 region states over 1.25 billion instructions were.</li>
+<li><code>world/test.js</code> runs one small world with the C engine on packed regions and once more with the JavaScript engine on Lands, and compares every region.</li>
+<li><code>node_check.sh</code> runs a small world on the CPUs only, with a card, and with a card across a stop and a resume, and compares the region files.</li>
+<li><code>engine/gputest</code> also holds a test on real data: <code>make_images.js</code> writes stored regions of the live world as the engine holds them, <code>run.py</code> steps them on a card, <code>compare.js</code> steps a sample again on a CPU and compares every byte.</li>
+</ul>
+<h2 id="on-a-card">On a card</h2>
+<ul>
+<li><strong>Packed bytes in slots, run on benches.</strong> A card keeps each of its regions as packed bytes in a slot of 192 KB, in one large buffer. A round runs through a fixed number of benches, Region structs with the small tables: a GPU thread unpacks a region into its bench, runs the round there and packs it back into its slot. So a full Region is needed only for the regions running at that moment. The slots take 14.3 GB on the RTX 4090 (76,000 regions) and 6.2 GB on the 4080 and on each RTX 3060 (33,300 regions), which leaves about 2.5 GB spare on every card for a round's travellers. <code>gpu/host.py</code> works out at start how many slots fit beside the benches and a round's travellers, and says so. The slots were 256 KB until 2026-11-12. Measured under rules 6 on 35,272 stored regions at the fullest hour of the day: a packed region is 123 KB at the median, 148 KB at the 99.9th percentile and 180 KB at most (65.5 KB of soup, 148 bytes for each living organism, 24 for each dead body). A region goes onto a card when it is under 85% of a slot, 163 KB; one that outgrows its slot is run by the card worker's own CPU thread until it fits again.</li>
+<li><strong>One GPU thread per region, four regions to a block.</strong> Regions run different code, and threads that share a block wait for each other's branches. With 32 regions to a block the RTX 4090 did 0.15 billion instructions per second, with 4 it did 2.0 billion. A round goes in launches of at most as many regions as there are benches, the busiest regions of the last round first.</li>
+<li><strong>Slow for one, fast for many.</strong> One region takes seconds on a card and milliseconds on a CPU thread. A card pays off from a few thousand regions on, and a launch lasts as long as its slowest region.</li>
+<li><strong>Giving back.</strong> A region that does not finish on the card keeps the bytes it had before the round, and its round is run again from those bytes on the card worker's own CPU thread: when its tables ran full during the passes or during the arrivals, or when its packed bytes no longer fit the slot. It stays there until it fits again (at most 70% of the small tables' bodies and 85% of a slot). The tables hold 1,024 bodies unless a card's <code>maxe</code> in world.json says otherwise: rules 6 fills regions more, about 3 in 100 pass 1,024 at some round and none 1,536, so its start sets 1,536. About 2 to 3% of the live regions are too large for a slot.</li>
+<li><strong>Nothing is lost when a card worker fails.</strong> It stores what the card holds before it exits, and between two rounds the card holds only whole regions.</li>
+<li><strong>Travellers in pieces.</strong> A round's arrivals and leavers go to and from a card as the engine's own records, in pieces sized to the video memory it has free, so their total has no ceiling. Every offset into the heap and the benches is 64 bits wide.</li>
+<li><strong>No fused multiply-add.</strong> The cards are told not to merge a multiplication and an addition into one step, because that rounds differently from JavaScript.</li>
+</ul>
+<h2 id="measured">Measured</h2>
+<p>The whole cluster, in instructions per second:</p>
+<table>
+<thead>
+<tr><th></th><th>rig A</th><th>rig B</th></tr>
+</thead>
+<tbody>
+<tr><td>JavaScript engine</td><td>47 to 74 million</td><td>35 to 39 million</td></tr>
+<tr><td>C engine on the CPUs</td><td>412 million</td><td>474 million</td></tr>
+</tbody>
+</table>
+<p>The real engine on a card, one full round on regions taken from the running world:</p>
+<table>
+<thead>
+<tr><th>card</th><th class="num">regions</th><th>seconds</th><th>instructions per second</th></tr>
+</thead>
+<tbody>
+<tr><td>RTX 4090</td><td class="num">12,000</td><td>4.7</td><td>2.0 billion</td></tr>
+<tr><td>RTX 4080</td><td class="num">12,000</td><td>11.3</td><td>0.8 billion</td></tr>
+<tr><td>RTX 3060</td><td class="num">6,000</td><td>8.7</td><td>0.33 billion</td></tr>
+<tr><td>rig A's 12 CPU threads</td><td class="num">12,000</td><td>about 25</td><td>0.4 billion</td></tr>
+</tbody>
+</table>
+<p>One round of the live world on 2026-11-11, before and after the CPU workers went over to packed regions, at about 105,000 regions per rig:</p>
+<table>
+<thead>
+<tr><th></th><th>rig A</th><th>rig B</th></tr>
+</thead>
+<tbody>
+<tr><td>16:22 UTC, regions as JavaScript objects: instructions per second</td><td>489 million</td><td>539 million</td></tr>
+<tr><td>16:48 UTC, packed regions and whole rounds in C</td><td>1,010 million</td><td>972 million</td></tr>
+<tr><td>where the CPU workers' time went before: running, arrivals, packing, disk</td><td>49%, 28%, 6%, 15%</td><td>60%, 4%, 4%, 28%</td></tr>
+<tr><td>and after</td><td>90%, 0%, 0.3%, 0.1%</td><td>92%, 0%, 0.3%, 0%</td></tr>
+<tr><td>RAM in use on the rig</td><td>46 GB before, 28 GB after</td><td>38 GB before, 29 GB after</td></tr>
+</tbody>
+</table>
+<p>One round of the live world, before and after the cards, at about 48,000 regions per rig:</p>
+<table>
+<thead>
+<tr><th></th><th>rig A</th><th>rig B</th></tr>
+</thead>
+<tbody>
+<tr><td>CPUs only: computing, then waiting for the disk budget</td><td>88 s + 164 s</td><td>57 s + 306 s</td></tr>
+<tr><td>with the cards, same size</td><td>10 s</td><td>53 s</td></tr>
+</tbody>
+</table>
+<p>The cards helped twice: they compute, and their memory holds 94,000 regions that would otherwise have been paged to the SSD.</p>
+<p>Where a round's time goes now, at 107,000 regions on rig A: the two cards need about 13 seconds for their 49,000 regions, and the 12 CPU workers 82 seconds for their 58,000. The cards wait for the CPUs.</p>
+<h2 id="what-was-tried-on-the-way">What was tried on the way</h2>
+<ul>
+<li>A reduced machine, only the ancestor's copy loop, reached 10.9 billion instructions per second on the 4090 and 0.12 billion on one CPU thread. The real machine does about a fifth of that on a card and half of it on a CPU, because it does much more per instruction and because real regions run different code. The reduced machine is in the repository's history, in commit <code>357afe7</code>.</li>
+<li>Tuning the JavaScript engine was not worth it. A profile showed no hot spot: 78% of the time was the instruction loop itself, about 100 nanoseconds per instruction.</li>
+<li>A native build of <code>soup.c</code>, run as a process beside the worker, gave the same bytes as the WebAssembly build on 300 stored regions and was 1.0 to 1.25 times as fast on rig A and 1.2 times on rig B. Not built: the gain is too small for a second engine to keep.</li>
+<li>Counting a turn in whole numbers (reserve, wear, cost and budget as integers, written back only around the six instructions that touch them) gave the same bytes, made an RTX 4080 4% faster and the CPUs 10% slower. Taken out again. Doubles are not what limits a card. With 2,000 regions on it, one card thread does about 240,000 instructions per second, against 55 to 120 million for a CPU thread: it waits for memory.</li>
+<li>The first start with the cards failed. The card workers loaded every region into their own memory at once and ran out of it. Both nodes found their world again from the region files. Regions now go to a card 256 at a time.</li>
+</ul>
+</article>
+<p class="note">From the project's notes, as committed. Names of machines are replaced and lines about how they are reached are left out.</p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="../data/index.html">data</a> · <a href="index.html">methods</a></footer>
+</body></html>

@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The assay and the sandbox: what a genome does, and whether it is a parasite · bitsoup lab</title>
+<meta name="description" content="bitsoup: machine evolution without a fitness function. Experiments, cluster telemetry and lab journal.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="../days/index.html">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="index.html" aria-current="page">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<p class="crumbs"><a href="index.html">Methods</a> / assay</p>
+<h1>The assay and the sandbox: what a genome does, and whether it is a parasite</h1>
+<nav class="toc" aria-label="On this page"><a href="#the-tubes">The tubes</a><a href="#the-fingerprint">The fingerprint</a><a href="#results-on-the-second-start-1600-utc-stop">Results on the second start, 16:00 UTC stop</a><a href="#what-is-not-done">What is not done</a></nav>
+<article class="prose"><p>Roadmap items 1.3 and 3.3, RELATED R2 (the three-tube test), published-work ideas 1 and 13, audit-rules idea 3, with the tubes and marks fixed in CLAIMS.md. Four read-only tools:</p>
+<table>
+<thead>
+<tr><th>tool</th><th>what it answers</th></tr>
+</thead>
+<tbody>
+<tr><td><code>world/assay.js</code></td><td>what a genome does when it runs: its behaviour fingerprint, set beside the census's byte labels; a catalogue of fingerprints in which a new one is a novelty</td></tr>
+<tr><td><code>world/sandbox.js</code></td><td>the three-tube test (breeds alone, parasite, does not breed), knockouts, invasion, kill rates between times</td></tr>
+<tr><td><code>world/virus.js</code></td><td>does a genotype that infects put its own code into hosts whose copying passes it on (claim C1)</td></tr>
+<tr><td><code>world/autopsy.js</code></td><td>an instrumented replay of stored regions with their neighbours: deaths by cause and age, who eats whom, what infectors do</td></tr>
+</tbody>
+</table>
+<p>They share one harness, the <code>Tube</code> of <code>world/assay.js</code>: a region on the JavaScript engine (<code>world/land.js</code>, the definition) whose <code>exec</code>, <code>spawn</code> and <code>depart</code> are wrapped on the instance, so that every instruction, birth and departure of a tracked lineage is seen. Nothing in the engine or the world is changed, and nothing is run on the rigs.</p>
+<h2 id="the-tubes">The tubes</h2>
+<p>As CLAIMS.md fixes them (&quot;The standard sandbox&quot;): a fresh region (random dead soup, as the Land makes it), mutation off (<code>physics: { copyMut: 0, cosmicMut: 0, indel: 0 }</code>), warmth 0.5, the neighbours' crowding 8, travellers counted and removed, 10,000 flips for each placed organism, seeds 1 to 8 for the region's random stream and the place, 8 rounds. Full light is the peak over 64 passes (56,250 flips a pass), dim a quarter, dark 0. A <strong>true daughter</strong> is an organism born in the tube whose bytes equal the genome's exactly.</p>
+<table>
+<thead>
+<tr><th>tube</th><th>what is in it</th><th>used by</th></tr>
+</thead>
+<tbody>
+<tr><td>A, B, C</td><td>the genome alone, full, dim and dark light</td><td>assay (A on 8 seeds, stopped at the first true daughter; seeds 1 and 2 run out for the marks, at most 2 million instructions each; B and C seed 1)</td></tr>
+<tr><td>A sealed</td><td>tube A counted strictly: a daughter counts only if her mother, while building her, ran no instruction and matched no template outside her own body and child</td><td>assay, sandbox</td></tr>
+<tr><td>A closed</td><td>tube A with travellers coming back into the same region, as if all four neighbours were this region</td><td>assay, sandbox, for genomes whose newborns leave</td></tr>
+<tr><td>A0, A15</td><td>tube A of seed 1 with every neighbour empty, and every neighbour full</td><td>assay, &quot;branches on looking&quot;</td></tr>
+<tr><td>P, Pd</td><td>founder plants grown from one copy for 8 rounds, the genome placed 16 bytes in front of one of them; then 2 rounds at full (P) or dim (Pd) light; seeds 1 and 2</td><td>assay</td></tr>
+<tr><td>H</td><td>as P with the host genotype: the commonest genotype of the candidate's own region that copies itself alone, else the commonest such of the rig; 8 rounds, 8 seeds; and the host alone for the same passes as control</td><td>sandbox, virus (16 rounds, 32 seeds)</td></tr>
+<tr><td>M</td><td>the candidate's own stored region, loaded as it is, run on with mutation off; the genotype must breed for two generations there</td><td>sandbox</td></tr>
+</tbody>
+</table>
+<p><strong>Decisions made here, without anyone to ask.</strong></p>
+<ul>
+<li>The rules come from the Land module given: the byte table is read by asking a Land what each of the 256 bytes means; energy from <code>land.E</code>; instruction numbers by name from <code>NAMES</code>; founders from <code>FOUNDERS</code>; light from <code>E.peak</code>, else <code>world.json</code>'s <code>sun.peak</code>. So the tools run under rules 5 (branch <code>senses</code>) too, where <code>guard</code>, <code>sense</code> and <code>feel</code> are recognised by name. Region files of other rules are refused by the Land, as they must be.</li>
+<li>A genotype is the sequence of instructions, as CLAIMS.md says, represented by its commonest exact spelling (<code>--by bytes</code> groups by exact bytes instead). The genotype that is run is that spelling.</li>
+<li>The borrower of the self-test calls the neighbour's copy procedure with the procedure's whole header as template, <code>call 0011 0111</code>. With the plant's own <code>call 0011</code> it finds the <code>1100</code> inside the next plant's <code>1111 0000</code> first, runs that plant's whole program, and copies the plant: a hijack, not a borrower.</li>
+<li>Tube M asks for two generations (a granddaughter), not one daughter: the organisms found in a stored region may be adults that are past what stops their daughters (most often a <code>travel</code> right after birth). With one daughter, 3 of the 16 &quot;parasites&quot; of rig A's first run were such adults (the commit message of b0af4ed says 14; that was written before the recheck had run, and is wrong).</li>
+<li>The fingerprint's P and Pd use 2 rounds after the placement on seeds 1 and 2, not 8 rounds on 8 seeds, and A's marks come from seeds 1 and 2 with at most 2 million instructions each: the 8-round grown region is about 800 organisms, and 4,000 genotypes would take a day. &quot;Copies alone&quot; uses all 8 seeds.</li>
+<li>What a genome computes: its founder's first answer is taken for each of the 256 pairs of 4-bit inputs (the input it is born with and every <code>in</code> pinned to a, b), and the table is priced by <code>sweep/lookup.js</code>. A genome that runs <code>hear</code> before its first <code>out</code> answers what it heard, not a function of a and b; that is reported apart.</li>
+</ul>
+<h2 id="the-fingerprint">The fingerprint</h2>
+<p>The marks of CLAIMS.md (&quot;The behaviour fingerprint&quot;), one letter each; the <strong>signature</strong> is the letters of the marks a genome has, in this order:</p>
+<table>
+<thead>
+<tr><th>letter</th><th>mark</th><th>taken from</th></tr>
+</thead>
+<tbody>
+<tr><td>R</td><td>copies alone</td><td>a true daughter in tube A on 6 or more of the 8 seeds</td></tr>
+<tr><td>P</td><td>catches light</td><td><code>photo</code> brought in more than 0 flips (A)</td></tr>
+<tr><td>E</td><td>eats the living</td><td>one or more organisms eaten alive (A or P; own kin counts, kin and strangers are kept apart in the numbers)</td></tr>
+<tr><td>S</td><td>eats the dead</td><td>one or more dead bodies eaten (Pd)</td></tr>
+<tr><td>I</td><td>infects</td><td>one or more <code>infect</code> writes into the living body of another lineage (P)</td></tr>
+<tr><td>T</td><td>travels</td><td>one or more departures (A)</td></tr>
+<tr><td>K</td><td>looks</td><td><code>look</code> executed (A)</td></tr>
+<tr><td>B</td><td>branches on looking</td><td>an <code>ifz</code> executed while <code>cx</code> holds what <code>look</code> wrote (or <code>decc</code> made of it), and the branches differ between A0 and A15</td></tr>
+<tr><td>Y, H</td><td>speaks, listens</td><td><code>say</code>, <code>hear</code> executed (A)</td></tr>
+<tr><td>A</td><td>is paid for a task</td><td>one or more paid answers (A)</td></tr>
+<tr><td>M</td><td>answers its mother</td><td>one or more paid answers to <code>glimpse</code> or <code>tell</code> (A)</td></tr>
+<tr><td>G, Z, W, F</td><td>guards, senses, branches on sensing, feels</td><td>the third start's instructions, when the Land has them</td></tr>
+</tbody>
+</table>
+<p>A fingerprint file also keeps per tube the instruction counts by opcode, births, true daughters, fidelity and how far unfaithful daughters differ, the share of instructions outside the own body, daughters built sealed, income by source (light, tasks, eaten alive, the dead), eating and infecting by target, and what it computes.</p>
+<p>The <strong>catalogue</strong> (<code>runs/assay/catalogue.json</code>) holds every signature with where it was first seen (rig, round, part, genotype, its program), how many genotypes and organisms showed it, and in which runs. A run marks a signature it adds as new: a <strong>novelty</strong>. The first run, on the 16:00 UTC stop, made 101 signatures.</p>
+<h2 id="results-on-the-second-start-1600-utc-stop">Results on the second start, 16:00 UTC stop</h2>
+<p>Data: RUN2's copy of both rigs' region files at the clean stop of 16:00 UTC (<code>runs/run2/data/&lt;rig&gt;/</code>; round 240 on rig A, 259 on rig B), an even sample over the land plus every region of the zone where the two clans meet (columns 6124 to 6189, rows 1490 to 1509), which is counted apart. RUN2 was still adding files while this ran: the counts below are of the files there at 17:40 UTC. These are development numbers: the sample is not the draw of 1,000 regions per checkpoint that CLAIMS.md fixes for verdicts, so the tools' tracking lines carry the numbers with the verdict &quot;unresolved&quot;.</p>
+<table>
+<thead>
+<tr><th></th><th style="text-align:right" class="num">rig A</th><th style="text-align:right" class="num">rig A contact zone</th><th style="text-align:right" class="num">rig B</th><th style="text-align:right" class="num">rig B contact zone</th></tr>
+</thead>
+<tbody>
+<tr><td>regions read</td><td style="text-align:right" class="num">3,906</td><td style="text-align:right" class="num">390</td><td style="text-align:right" class="num">5,861</td><td style="text-align:right" class="num">920</td></tr>
+<tr><td>organisms</td><td style="text-align:right" class="num">941,605</td><td style="text-align:right" class="num">125,798</td><td style="text-align:right" class="num">2,512,519</td><td style="text-align:right" class="num">385,203</td></tr>
+<tr><td>genotypes (instruction sequences)</td><td style="text-align:right" class="num">396,219</td><td style="text-align:right" class="num">34,543</td><td style="text-align:right" class="num">873,354</td><td style="text-align:right" class="num">113,738</td></tr>
+<tr><td>exact spellings</td><td style="text-align:right" class="num">406,875</td><td style="text-align:right" class="num">36,396</td><td style="text-align:right" class="num">909,614</td><td style="text-align:right" class="num">118,809</td></tr>
+<tr><td>organisms of the 1,000 commonest genotypes</td><td style="text-align:right" class="num">15.4%</td><td style="text-align:right" class="num">50.4%</td><td style="text-align:right" class="num">11.5%</td><td style="text-align:right" class="num">32.6%</td></tr>
+</tbody>
+</table>
+<p>Most genotypes are seen once: the 1,000 commonest stand for a sixth of rig A's organisms and a ninth of rig B's. Every table below is about those 1,000, weighted by their organisms.</p>
+<h3 id="what-the-commonest-genotypes-do">What the commonest genotypes do</h3>
+<p>Share of the organisms of the 1,000 commonest genotypes whose genotype has each mark:</p>
+<table>
+<thead>
+<tr><th>mark</th><th style="text-align:right" class="num">rig A</th><th style="text-align:right" class="num">contact</th><th style="text-align:right" class="num">rig B</th><th style="text-align:right" class="num">contact</th></tr>
+</thead>
+<tbody>
+<tr><td>R copies alone (sealed tube, 6 of 8 seeds)</td><td style="text-align:right" class="num">61.9%</td><td style="text-align:right" class="num">86.9%</td><td style="text-align:right" class="num">38.2%</td><td style="text-align:right" class="num">74.9%</td></tr>
+<tr><td>... or does when its travellers come back (closed tube)</td><td style="text-align:right" class="num">98.9%</td><td style="text-align:right" class="num">99.8%</td><td style="text-align:right" class="num">99.7%</td><td style="text-align:right" class="num">99.2%</td></tr>
+<tr><td>... sealed: no code or template of another used</td><td style="text-align:right" class="num">60.7%</td><td style="text-align:right" class="num">86.4%</td><td style="text-align:right" class="num">37.1%</td><td style="text-align:right" class="num">74.3%</td></tr>
+<tr><td>P catches light (alone)</td><td style="text-align:right" class="num">78.2%</td><td style="text-align:right" class="num">99.2%</td><td style="text-align:right" class="num">45.4%</td><td style="text-align:right" class="num">85.7%</td></tr>
+<tr><td>E eats the living (alone or among plants; own kin counts)</td><td style="text-align:right" class="num">10.8%</td><td style="text-align:right" class="num">4.8%</td><td style="text-align:right" class="num">18.2%</td><td style="text-align:right" class="num">11.3%</td></tr>
+<tr><td>... of these a living stranger</td><td style="text-align:right" class="num">0.8%</td><td style="text-align:right" class="num">0.1%</td><td style="text-align:right" class="num">4.6%</td><td style="text-align:right" class="num">2.2%</td></tr>
+<tr><td>S eats the dead</td><td style="text-align:right" class="num">2.1%</td><td style="text-align:right" class="num">0.2%</td><td style="text-align:right" class="num">17.5%</td><td style="text-align:right" class="num">6.3%</td></tr>
+<tr><td>I writes into another lineage's living body</td><td style="text-align:right" class="num">0.2%</td><td style="text-align:right" class="num">9.3%</td><td style="text-align:right" class="num">0.3%</td><td style="text-align:right" class="num">1.1%</td></tr>
+<tr><td>T travels</td><td style="text-align:right" class="num">49.9%</td><td style="text-align:right" class="num">19.7%</td><td style="text-align:right" class="num">63.3%</td><td style="text-align:right" class="num">32.5%</td></tr>
+<tr><td>K looks</td><td style="text-align:right" class="num">34.1%</td><td style="text-align:right" class="num">41.4%</td><td style="text-align:right" class="num">11.1%</td><td style="text-align:right" class="num">33.7%</td></tr>
+<tr><td>B branches on looking</td><td style="text-align:right" class="num">11.0%</td><td style="text-align:right" class="num">4.6%</td><td style="text-align:right" class="num">1.4%</td><td style="text-align:right" class="num">7.0%</td></tr>
+<tr><td>Y speaks</td><td style="text-align:right" class="num">47.3%</td><td style="text-align:right" class="num">26.2%</td><td style="text-align:right" class="num">21.7%</td><td style="text-align:right" class="num">21.1%</td></tr>
+<tr><td>H listens</td><td style="text-align:right" class="num">73.3%</td><td style="text-align:right" class="num">88.0%</td><td style="text-align:right" class="num">12.6%</td><td style="text-align:right" class="num">59.3%</td></tr>
+<tr><td>A is paid for a task</td><td style="text-align:right" class="num">67.4%</td><td style="text-align:right" class="num">87.2%</td><td style="text-align:right" class="num">52.7%</td><td style="text-align:right" class="num">90.6%</td></tr>
+<tr><td>M answers its mother</td><td style="text-align:right" class="num">47.9%</td><td style="text-align:right" class="num">75.6%</td><td style="text-align:right" class="num">4.5%</td><td style="text-align:right" class="num">49.3%</td></tr>
+<tr><td>census label &quot;plant&quot; (holds photo), over all organisms</td><td style="text-align:right" class="num">99.4%</td><td style="text-align:right" class="num">100.0%</td><td style="text-align:right" class="num">99.8%</td><td style="text-align:right" class="num">99.9%</td></tr>
+<tr><td>census label &quot;eater&quot; (holds eat), over all organisms</td><td style="text-align:right" class="num">14.3%</td><td style="text-align:right" class="num">1.6%</td><td style="text-align:right" class="num">51.3%</td><td style="text-align:right" class="num">11.0%</td></tr>
+<tr><td>census label &quot;infector&quot; (holds infect), over all organisms</td><td style="text-align:right" class="num">6.3%</td><td style="text-align:right" class="num">14.6%</td><td style="text-align:right" class="num">5.4%</td><td style="text-align:right" class="num">6.7%</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>The commonest way of life is to leave at birth.</strong> The genotypes that do not copy themselves in a sealed tube are, all but a handful, genotypes whose newborn runs <code>travel</code> within its first instructions: in a sealed tube it is gone before it copies anything. With travellers let back in, 99% to 99.8% of the organisms copy themselves alone. The commonest signature of rig B is <code>T</code> alone: 200 genotypes, 92,000 organisms, which travel first and breed in the region they arrive in. On rig A it is <code>PTH</code> (102 genotypes, 22,000).</li>
+<li><strong>Holding is not doing.</strong> Of the 1,000 commonest, the census's &quot;eater&quot; label is on 93 genotypes of rig A and 543 of rig B. 31% and 43% of them eat a living organism in any tube, and 12% each eat a living stranger; the rest eat their own daughters (the grazer's habit: an <code>eat</code> aimed just behind the own body, where the first daughter is put) or nothing. Of the census's &quot;infectors&quot; among the commonest 100 that hold <code>infect</code>, 38% and 53% run it at all, and 8% and 17% write into another lineage's living body. In the contact zone of rig A 70% of the 145 commonest infect-holders do. The commonest of them (signature <code>RPIHAM</code>, for example <code>b4fa1f957fcb</code>: <code>... adrb 000 movba adrf 0001 subab 101 infect 1 mal ...</code>) run <code>infect</code> right after <code>adrf</code> and <code>subab</code>, with <code>ax</code> at their own end and <code>bx</code> at their own start: each copies its own first byte onto the byte after its body, one byte per life, into whoever lies there.</li>
+<li><strong>Borrowers by the census are not borrowers by the tubes.</strong> The census counts 1.7% and 0.8% of all organisms as borrowers (no <code>movii</code>); among the 1,000 commonest genotypes there are only 2 on each rig, so nearly all of them are rare mutants. None of the 2 copies itself alone; see the parasites below.</li>
+<li><strong>What they compute.</strong> Run on all 256 pairs of 4-bit inputs, most genomes that answer either echo their input (<code>a</code>, 1.95 bits by the sweep's catalogue: 20% of rig A's commonest, 44% of rig B's) or answer what they heard from their mother (71% and 7%; this is the <code>glimpse</code> habit). A few compute constants: <code>pushc popa</code> with <code>decc</code> before it, up to 26.76 bits (0.5% of rig B's).</li>
+<li><strong>Looking.</strong> Organisms that branch on what <code>look</code> saw are 11% of rig A's commonest and 1.4% of rig B's (claim C8 needs 1% at two checkpoints 256 rounds apart; this is one checkpoint).</li>
+<li><strong>Dim and dark.</strong> Every genotype that has a true daughter in full light also has one in the dark on seed 1: the 10,000 flips a placed organism starts with pay for a daughter. Light decides how long a lineage lasts, not whether one copy is made; tubes B and C say little at this reserve.</li>
+<li><strong>The catalogue</strong> after this run holds 101 signatures; 58 were first seen on rig A, 43 more on rig B.</li>
+</ul>
+<h3 id="the-three-tubes-parasites">The three tubes: parasites</h3>
+<table>
+<thead>
+<tr><th>class</th><th style="text-align:right">rig A</th><th style="text-align:right">contact</th><th style="text-align:right">rig B</th><th style="text-align:right">contact</th></tr>
+</thead>
+<tbody>
+<tr><td>breeds alone (A on 6 or more of 8 seeds)</td><td style="text-align:right">699 (61.9%)</td><td style="text-align:right">905 (86.9%)</td><td style="text-align:right">531 (38.2%)</td><td style="text-align:right">821 (74.9%)</td></tr>
+<tr><td>travels before breeding (A 0, closed tube 6 or more)</td><td style="text-align:right">288 (37.0%)</td><td style="text-align:right">90 (12.9%)</td><td style="text-align:right">464 (61.5%)</td><td style="text-align:right">171 (24.3%)</td></tr>
+<tr><td>parasite: fails A, breeds beside others (H on 4 of 8, or M two generations on 4 of 8)</td><td style="text-align:right">10 (0.8%)</td><td style="text-align:right">2 (0.1%)</td><td style="text-align:right">5 (0.3%)</td><td style="text-align:right">8 (0.8%)</td></tr>
+<tr><td>... of these running borrowed code (10% or more of the instructions that built the counted daughters lie outside their own body)</td><td style="text-align:right">5</td><td style="text-align:right">2</td><td style="text-align:right">2</td><td style="text-align:right">4</td></tr>
+<tr><td>one generation in its region only</td><td style="text-align:right">3 (0.2%)</td><td style="text-align:right">1 (0.0%)</td><td style="text-align:right">0</td><td style="text-align:right">0</td></tr>
+<tr><td>does not breed</td><td style="text-align:right">0</td><td style="text-align:right">2 (0.1%)</td><td style="text-align:right">0</td><td style="text-align:right">0</td></tr>
+</tbody>
+</table>
+<p>(Genotypes, and in brackets the share of the organisms of the 1,000 commonest.)</p>
+<p>There are parasites in Tierra's sense on both rigs: genomes of 35 to 65 bytes, shorter than the 72-byte plant they descend from, without a copy loop of their own, whose <code>call</code> with a template such as <code>0111</code> lands in a neighbour's copy loop. In tube H they have true daughters on 7 or 8 of 8 seeds, running 89% to 95% of the instructions that build them in the host's body; alone, none. The largest:</p>
+<table>
+<thead>
+<tr><th>genotype</th><th>rig</th><th style="text-align:right">organisms (in confirmation blocks)</th><th style="text-align:right" class="num">bytes</th><th style="text-align:right">A</th><th style="text-align:right">H</th><th style="text-align:right">M</th><th style="text-align:right">foreign share H</th><th>host lineage with / without</th></tr>
+</thead>
+<tbody>
+<tr><td>2bf0bc77fe84</td><td>rig B contact</td><td style="text-align:right">265 (0)</td><td style="text-align:right" class="num">38</td><td style="text-align:right">0/8</td><td style="text-align:right">8/8</td><td style="text-align:right">8/8</td><td style="text-align:right">89%</td><td>441 / 447</td></tr>
+<tr><td>c339dde104c4</td><td>rig B contact</td><td style="text-align:right">239 (0)</td><td style="text-align:right" class="num">35</td><td style="text-align:right">0/8</td><td style="text-align:right">8/8</td><td style="text-align:right">8/8</td><td style="text-align:right">95%</td><td>613 / 626</td></tr>
+<tr><td>730981a0e99b</td><td>rig A</td><td style="text-align:right">200 (96)</td><td style="text-align:right" class="num">54</td><td style="text-align:right">0/8</td><td style="text-align:right">0/8</td><td style="text-align:right">8/8, 4 with two generations</td><td style="text-align:right">M 98%</td><td>455 / 463</td></tr>
+<tr><td>a331b6fc591a</td><td>rig B</td><td style="text-align:right">199 (0)</td><td style="text-align:right" class="num">49</td><td style="text-align:right">0/8</td><td style="text-align:right">8/8</td><td style="text-align:right">8/8</td><td style="text-align:right">93%</td><td>447 / 453</td></tr>
+<tr><td>7756502dedb3</td><td>rig B</td><td style="text-align:right">190 (0)</td><td style="text-align:right" class="num">40</td><td style="text-align:right">0/8</td><td style="text-align:right">8/8</td><td style="text-align:right">8/8</td><td style="text-align:right">93%</td><td>486 / 492</td></tr>
+<tr><td>c0d1f800c66d</td><td>rig A</td><td style="text-align:right">102 (65)</td><td style="text-align:right" class="num">64</td><td style="text-align:right">0/8</td><td style="text-align:right">0/8</td><td style="text-align:right">8/8</td><td style="text-align:right">M 97%</td><td>455 / 463</td></tr>
+<tr><td>562938b431f8</td><td>rig A</td><td style="text-align:right">83 (83)</td><td style="text-align:right" class="num">63</td><td style="text-align:right">0/8</td><td style="text-align:right">8/8</td><td style="text-align:right">8/8</td><td style="text-align:right">92%</td><td>456 / 461</td></tr>
+</tbody>
+</table>
+<p>For example <code>a331b6fc591a</code>: <code>1111 out 000 look decc 0 adrb 0000 movba adrf 0001 photo subab ifz popb 10 pushb pushc photo mal call 0111 divide popc photo popb jmpb 01 say 1110</code>. The host lineage ends 1% to 2% smaller than without it: these parasites cost their hosts little. Two infect-holders (<code>c1da1f061eac</code>, <code>f7b463f8f3f4</code> on rig A) are code-borrowing parasites too, but they do not infect anything that matters (below).</p>
+<p>Claim C2 asks for such a genotype with 100 or more organisms in the confirmation blocks. Six of the seven largest have 100 or more organisms, but all of them in development blocks, or 96 in confirmation (<code>730981a0e99b</code>). That is a development finding, and the verdict waits for the draw of CLAIMS.md.</p>
+<p>The other parasites (by class) breed beside others without running much foreign code: they match a template in a neighbour (100% of their daughters in H were built with a template outside the mother, 4% to 17% in M), or they are travellers whose daughters stay when their mothers are too poor to pay for the journey.</p>
+<h3 id="is-it-a-virus-claim-c1">Is it a virus (claim C1)</h3>
+<p>The candidates are the commonest genotypes with the mark &quot;infects&quot; (I): 8 on rig A and 17 on rig B outside the contact zone (32 tubes and 32 control tubes each, 16 rounds), 100 and 38 in the contact zones (8 and 8, as a first look). The positive fixture, a hand-made virus that writes 4 bytes of its own tape into the blank tape of the plant behind it, passes level 1 in 14 of 32 tubes and in 0 of 32 with <code>infect</code> off; the vandal and the plant show no transfer (<code>node world/virus.js --selftest</code>).</p>
+<table>
+<thead>
+<tr><th></th><th style="text-align:right" class="num">rig A</th><th style="text-align:right">contact</th><th style="text-align:right" class="num">rig B</th><th style="text-align:right">contact</th></tr>
+</thead>
+<tbody>
+<tr><td>candidates</td><td style="text-align:right" class="num">8</td><td style="text-align:right">100</td><td style="text-align:right" class="num">17</td><td style="text-align:right">38</td></tr>
+<tr><td>a transfer in the host's grandchildren (level 1)</td><td style="text-align:right" class="num">0</td><td style="text-align:right">0</td><td style="text-align:right" class="num">0</td><td style="text-align:right">0</td></tr>
+<tr><td>any run of 4 marked bytes in a host, any generation</td><td style="text-align:right" class="num">0</td><td style="text-align:right">0</td><td style="text-align:right" class="num">0</td><td style="text-align:right">0</td></tr>
+<tr><td>host lineage at the end half or less of the control's</td><td style="text-align:right" class="num">0</td><td style="text-align:right">13 (962 organisms)</td><td style="text-align:right" class="num">0</td><td style="text-align:right">6 (421)</td></tr>
+</tbody>
+</table>
+<p><strong>No virus.</strong> Not one of 163 infecting genotypes leaves 4 consecutive bytes of its own code in a host, in any generation. What they write is one byte at a time, mostly their own first byte onto the byte after their body. In the contact zones that is a weapon: 13 genotypes of rig A and 6 of rig B leave the host lineage of their tube at half or less of the control's, several at zero (for example <code>a0ed48431777</code>: 0.4 hosts against 458 without its <code>infect</code>). None of them helps its host by 10% or more. The replay below agrees: 8 births in 1.4 million on rig B (4 in each part) were built mostly by an organism of the child's own genotype other than its mother, and none on rig A.</p>
+<h3 id="which-bytes-matter-knockout">Which bytes matter (knockout)</h3>
+<p>The founder plant: 42 of its 72 bytes matter (most of the 34 other instructions in their place stop true breeding or light catching), 63 can be broken by some replacement; the copy loop is all <code>#</code>, the blank tape all <code>+</code> (only <code>travel</code> there harms, by taking the newborn out of the tube):</p>
+<pre><code>11110000000000 adrb 0000 movba adrf 0001 subab 1010 pushb pushc mal call 0011 divide popc popb jmpb 0101 zeroc 11001000 movii inca incb decc photo ifz ret jmpb 0111 zeroc 1110
+####++++++++++############++++++####++#.......+#################.+.+####
+</code></pre>
+<p>The byte after <code>divide</code> and the jump back to the start (<code>popc popb jmpb 0101</code>) do not matter in this test: a lineage of mothers that each make one daughter breeds true just as well. By the rule of claim C7 (8 substitutions per byte, informative when 4 lower the true daughters below 90%, here in 1 round instead of 8) the plant has 56 informative bytes, share 0.78.</p>
+<p>The five commonest genotypes of each rig, in closed tubes since they travel at birth: 35 to 43 bytes matter on rig A (plant 42) and 36 to 43 on rig B. The commonest genomes are as long as the founder and hold no more bytes that matter: what changed is on the tape (<code>travel</code>, <code>hear</code>, <code>out</code>, <code>say</code>, <code>eat</code>), where one byte does a lot.</p>
+<h3 id="who-wins-invasion-9-to-1-closed-tubes-4-rounds">Who wins (invasion, 9 to 1, closed tubes, 4 rounds)</h3>
+<p>On each rig one of the eight commonest genotypes wins against all the others, from either side. On rig A it is the rig's commonest self-copier <code>c014c1e5fa74</code> (the host of tube H): as the invader it reaches half or more against 6 of the 7 residents, as the resident it holds every invader to 4% or less. On rig B it is <code>29f485abff95</code>, 63 bytes: 99% to 100% as the invader against every resident, 0% for every invader against it. Others lose to everyone: rig B's <code>66c7d8c5edf9</code> is taken over by every invader (97% to 100%) and never gets in anywhere. The matrices are in <code>runs/assay/&lt;rig&gt;.invasion.json</code>; they are short runs of single regions and say who is faster there, not who lasts in the world.</p>
+<h3 id="the-autopsy-two-rounds-of-300-stored-regions-with-their-neighbours">The autopsy: two rounds of 300 stored regions with their neighbours</h3>
+<p>Each region is replayed with the stored regions around it (a set of up to 9), under the world's rules and sky, mutation on; only the centre is counted.</p>
+<table>
+<thead>
+<tr><th></th><th style="text-align:right" class="num">rig A</th><th style="text-align:right" class="num">contact</th><th style="text-align:right" class="num">rig B</th><th style="text-align:right" class="num">contact</th></tr>
+</thead>
+<tbody>
+<tr><td>organisms at the start</td><td style="text-align:right" class="num">72,705</td><td style="text-align:right" class="num">96,988</td><td style="text-align:right" class="num">128,301</td><td style="text-align:right" class="num">124,663</td></tr>
+<tr><td>births in 2 rounds</td><td style="text-align:right" class="num">153,437</td><td style="text-align:right" class="num">191,809</td><td style="text-align:right" class="num">740,421</td><td style="text-align:right" class="num">673,002</td></tr>
+<tr><td>deaths: starved</td><td style="text-align:right" class="num">89.2%</td><td style="text-align:right" class="num">95.5%</td><td style="text-align:right" class="num">25.8%</td><td style="text-align:right" class="num">31.1%</td></tr>
+<tr><td>eaten alive</td><td style="text-align:right" class="num">2.7%</td><td style="text-align:right" class="num">0.4%</td><td style="text-align:right" class="num">14.1%</td><td style="text-align:right" class="num">4.8%</td></tr>
+<tr><td>reaped (no room)</td><td style="text-align:right" class="num">2.0%</td><td style="text-align:right" class="num">1.3%</td><td style="text-align:right" class="num">56.8%</td><td style="text-align:right" class="num">62.7%</td></tr>
+<tr><td>left the region</td><td style="text-align:right" class="num">6.1%</td><td style="text-align:right" class="num">2.8%</td><td style="text-align:right" class="num">3.3%</td><td style="text-align:right" class="num">1.4%</td></tr>
+<tr><td>worn out</td><td style="text-align:right" class="num">0.0%</td><td style="text-align:right" class="num">0.0%</td><td style="text-align:right" class="num">0.0%</td><td style="text-align:right" class="num">0.0%</td></tr>
+<tr><td>median age of the starved born in the replay, passes</td><td style="text-align:right" class="num">35</td><td style="text-align:right" class="num">42</td><td style="text-align:right" class="num">15</td><td style="text-align:right" class="num">2</td></tr>
+<tr><td>victims eaten alive: own daughter</td><td style="text-align:right" class="num">9.1%</td><td style="text-align:right" class="num">70.9%</td><td style="text-align:right" class="num">1.3%</td><td style="text-align:right" class="num">2.9%</td></tr>
+<tr><td>... same genotype</td><td style="text-align:right" class="num">20.5%</td><td style="text-align:right" class="num">1.8%</td><td style="text-align:right" class="num">16.5%</td><td style="text-align:right" class="num">14.9%</td></tr>
+<tr><td>... another genotype of the same clan</td><td style="text-align:right" class="num">68.0%</td><td style="text-align:right" class="num">27.3%</td><td style="text-align:right" class="num">81.9%</td><td style="text-align:right" class="num">82.0%</td></tr>
+<tr><td>... the other clan</td><td style="text-align:right" class="num">0.0%</td><td style="text-align:right" class="num">0.0%</td><td style="text-align:right" class="num">0.1%</td><td style="text-align:right" class="num">0.1%</td></tr>
+<tr><td><code>infect</code> into a living organism</td><td style="text-align:right" class="num">4.8%</td><td style="text-align:right" class="num">41.4%</td><td style="text-align:right" class="num">21.2%</td><td style="text-align:right" class="num">21.0%</td></tr>
+<tr><td>... into its own child (a copy)</td><td style="text-align:right" class="num">56.2%</td><td style="text-align:right" class="num">2.5%</td><td style="text-align:right" class="num">35.5%</td><td style="text-align:right" class="num">21.7%</td></tr>
+<tr><td>... out of reach</td><td style="text-align:right" class="num">22.0%</td><td style="text-align:right" class="num">20.8%</td><td style="text-align:right" class="num">23.0%</td><td style="text-align:right" class="num">47.7%</td></tr>
+<tr><td>instructions run outside the own body</td><td style="text-align:right" class="num">8.0%</td><td style="text-align:right" class="num">4.4%</td><td style="text-align:right" class="num">3.7%</td><td style="text-align:right" class="num">4.2%</td></tr>
+</tbody>
+</table>
+<p>On rig A almost everyone dies of hunger, at about half a round old; on rig B most are cleared by the reaper to make room, at a third of a round. Eaters eat their own clan: the other clan is 0.1% of the victims even in the contact zone, where both live. Nobody dies of old age in two rounds.</p>
+<h2 id="what-is-not-done">What is not done</h2>
+<ul>
+<li><strong>Verdicts.</strong> All numbers above are from RUN2's even sample, not from the 1,000-region draw of CLAIMS.md; the tracking lines say &quot;unresolved&quot;. Run on the draw with <code>--claims-sample</code> for verdicts.</li>
+<li><strong>Claim C1's 32 seeds in the contact zones</strong>: the 138 contact candidates had 8 tubes each. None showed a single marked run, so 32 would change little, but the threshold is stated for 32.</li>
+<li><strong>Claim C3 and C4</strong>: <code>rare</code> (invasion from 1% in a patch of regions, 300 rounds) and <code>timeshift</code> (kill rates of predators of one time against prey of another) are built and run on small cases, not on the world: C4 needs three checkpoints 256 rounds apart, which do not exist yet, and a 4 by 4 patch for 300 rounds in JavaScript takes hours per seed.</li>
+<li><strong>C7</strong> needs the knockout count at six checkpoints; here there is one.</li>
+<li><strong>The fingerprint</strong> uses 2 seeds for its marks and 2 rounds in tubes P and Pd (see the decisions above); the &quot;needs a host&quot; mark of CLAIMS.md is the sandbox's class, not part of the assay's signature.</li>
+<li><strong>Rules 5.</strong> The tools read the rules from the Land they are given, but they were run only under rules 4.</li>
+</ul>
+</article>
+<p class="note">From the project's notes, as committed. Names of machines are replaced and lines about how they are reached are left out.</p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="../data/index.html">data</a> · <a href="index.html">methods</a></footer>
+</body></html>

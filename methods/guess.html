@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A guesser beside the exact search · bitsoup lab</title>
+<meta name="description" content="bitsoup: machine evolution without a fitness function. Experiments, cluster telemetry and lab journal.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="../days/index.html">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="index.html" aria-current="page">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<p class="crumbs"><a href="index.html">Methods</a> / guess</p>
+<h1>A guesser beside the exact search</h1>
+<nav class="toc" aria-label="On this page"><a href="#the-guessers">The guessers</a><a href="#the-two-searches">The two searches</a><a href="#results">Results</a><a href="#generations-learning-from-its-own-finds">Generations: learning from its own finds</a><a href="#run-it">Run it</a><a href="#files">Files</a><a href="#built-on">Built on</a></nav>
+<article class="prose"><p>The exact search and <code>guess/</code> use 14 of bitsoup's instructions: arithmetic and logic on three registers <code>ax</code>, <code>bx</code>, <code>cx</code> and a stack of 10, with no jumps. A program starts with the inputs <code>a</code> in <code>ax</code> and <code>b</code> in <code>bx</code>, and its answer is what <code>ax</code> holds at the end.</p>
+<p><strong>A function here is a function of 4-bit inputs:</strong> the low 4 bits of the answer on all 256 pairs of 4-bit <code>a</code> and <code>b</code>, written as 256 hex digits. The world itself asks its tasks with 16-bit numbers and checks all 16 bits. These instructions keep the low bits closed: the low 4 bits of an answer depend only on the low 4 bits of the inputs. So a program right on 4-bit inputs is right on the low 4 bits of any input, but not necessarily on the other 12, and is not by itself an answer the world pays. For the tasks that the exhaustive sweep reaches, its first shortest programs were checked and are also right on 16 bits; that was found by checking, not guaranteed by a rule.</p>
+<p>The exact search knows every function's shortest program up to a length: <code>search/</code> up to 9 instructions with a proof, and <code>search/deep.js</code> the whole catalogue up to 12 (9,650,850 functions). <code>guess/</code> asks the other question: can a guess about the next instruction, learned from the shortest programs, make a search faster, and reach past the exact range? A guess may make a search slow, but never wrong: every program found is checked.</p>
+<h2 id="the-guessers">The guessers</h2>
+<p>All of them learn from shortest programs of up to 8 instructions, with one function in ten held out whole and used only to score them. A guesser gives each of the 14 instructions a probability at every step of a search.</p>
+<table>
+<thead>
+<tr><th>guesser</th><th>sees</th><th class="num">first choice right</th><th class="num">bits a step</th></tr>
+</thead>
+<tbody>
+<tr><td>blind</td><td>nothing</td><td class="num">14%</td><td class="num">3.81</td></tr>
+<tr><td>counted: the two instructions before</td><td>the two instructions before</td><td class="num">39%</td><td class="num">2.26</td></tr>
+<tr><td>counted: the situation</td><td>how <code>ax</code>, <code>bx</code>, <code>cx</code> and the top of the stack stand to the target</td><td class="num">33%</td><td class="num">2.69</td></tr>
+<tr><td>learned: logistic</td><td>87 features of the machine state against the target</td><td class="num">45%</td><td class="num">2.08</td></tr>
+<tr><td>learned: one hidden layer of 32</td><td>the same 87 features</td><td class="num">45%</td><td class="num">1.99</td></tr>
+<tr><td>lookups (<code>guess/cm.js</code>)</td><td>the situation and the two instructions before, joined</td><td class="num">45%</td><td class="num">2.01</td></tr>
+</tbody>
+</table>
+<p>&quot;Bits a step&quot; is what the guesser charges, on average, for each instruction of the held-out shortest programs; a blind choice costs log2 14 = 3.81. The lookups are nine small tables, each picked by part of what a node shows; the guess is the softmax of the sum of the rows picked. Fitting them is a convex problem, solved in 4 seconds, against more than a minute for the two networks.</p>
+<h2 id="the-two-searches">The two searches</h2>
+<ul>
+<li><strong>States</strong> (<code>guess/lib.js</code>): best first over machine states, each state kept once, any guesser, at most 50,000 expansions a target. The work of the blind version is known exactly from the catalogue, so its saving is exact too.</li>
+<li><strong>Programs</strong> (<code>guess/dfs.js</code>): depth first in the order of a table, storing nothing. A program's cost is the sum of its instructions' costs; the search enters only programs within a budget that grows by one bit a pass, so programs come roughly in falling probability. The table is either the two instructions before, or the lookups, which also see the situation; the situation is read from one byte kept per value, so a step stays one lookup. At most 300 million programs a target, of up to 12 instructions.</li>
+</ul>
+<h2 id="results">Results</h2>
+<p>From <code>runs/guess/reference.txt</code>, 100 targets of each kind (<code>node guess/run.js</code>, merged with <code>--merge</code>).</p>
+<table>
+<thead>
+<tr><th>targets</th><th>search</th><th class="num">found</th><th>work, median</th><th class="num">seconds a target</th></tr>
+</thead>
+<tbody>
+<tr><td>in range: held-out functions of 8</td><td>states, best guesser (hidden layer)</td><td class="num">92%</td><td>7,422 expansions</td><td class="num">0.2</td></tr>
+<tr><td></td><td>programs, two before</td><td class="num">100%</td><td>295,027 programs</td><td class="num">0.2</td></tr>
+<tr><td></td><td>programs, lookups</td><td class="num">100%</td><td>84,270 programs</td><td class="num">0.1</td></tr>
+<tr><td>one past: functions of 9</td><td>states, best guesser (hidden layer)</td><td class="num">47%</td><td>20,343 expansions</td><td class="num">0.6</td></tr>
+<tr><td></td><td>programs, two before</td><td class="num">100%</td><td>1,797,283 programs</td><td class="num">1.0</td></tr>
+<tr><td></td><td>programs, lookups</td><td class="num">100%</td><td>570,118 programs</td><td class="num">0.3</td></tr>
+<tr><td>beyond: no program of up to 9</td><td>states, best guesser (logistic)</td><td class="num">14%</td><td>23,724 expansions</td><td class="num">0.7</td></tr>
+<tr><td></td><td>programs, two before</td><td class="num">94%</td><td>16,867,386 programs</td><td class="num">15.3</td></tr>
+<tr><td></td><td>programs, lookups</td><td class="num">97%</td><td>3,901,829 programs</td><td class="num">4.3</td></tr>
+<tr><td><code>a*b</code> and <code>a*a</code></td><td>all</td><td class="num">0%</td><td></td><td class="num"></td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Work is counted in different units.</strong> An expansion of the state search makes 14 successor states and stores them; a program of the depth-first search is one step and stores nothing. Compare within an engine, not across.</li>
+<li><strong>The depth-first search, in a table's order, is the one that reaches past the range.</strong> The guided state search finds at most 14% of the functions beyond 9, the depth-first search 94% to 97%. The lookups cut its work three to four times against the two-instruction table.</li>
+<li><strong>Shortest.</strong> Both searches go by probability, not by length, so a program found can be longer than the shortest. In range and one past, the shortest length is known; the lookups found it for 80% and 83% of the targets, the two-instruction table for 96% and 82%.</li>
+<li><strong>Beyond is mostly one past.</strong> Of the 102 functions beyond 9, <code>search/deep.js</code> proved 93 have a shortest program of 10 instructions and 9 one of 11. 81% of the programs the lookups found there have the minimum length, and the median is at the minimum.</li>
+<li><strong><code>a*b</code> and <code>a*a</code></strong>, as functions of 4-bit inputs, have no program of up to 12 instructions (<code>search/deep.js</code>), so the table's searches, which stop at 12, cannot find them. <code>guess/far.js</code> searches one function in the lookups' order with programs of up to 20, and found one of 20 instructions for 4-bit <code>a*a</code> after 793 million programs, in 3 minutes. With the limit lowered step by step it found shorter ones: 17, 16, and 15 instructions after 4.4 billion programs, in 10 minutes: <code>movba incb nand subab pushc popb nand inca inca nand incb subac subab nand subac</code>. With programs of up to 14 it found none among 10 billion, which proves nothing. Each is right on all 256 pairs of 4-bit inputs in both interpreters. <code>search/deep.js</code> has proven that none of up to 13 exists, so the shortest program for 4-bit <code>a*a</code> has 14 or 15 instructions; its run to 14 decides. <strong>None of them is an answer the world pays:</strong> on 16-bit inputs the 15 is wrong on 4,087 of 4,096 random pairs. Programs right on 16 bits are known only with loops (<code>search/loops.js</code>, 28 and 29 bytes for <code>a*b</code> and <code>a*a</code>), and most of their answers cost more than a lifetime. No program has been found for 4-bit <code>a*b</code> yet.</li>
+<li><strong>Nothing found was wrong.</strong> Every program is checked on all 256 pairs by the search that found it and again in the soup's own interpreter (<code>soup/alife.js</code>); none failed, and none was shorter than proven possible.</li>
+</ul>
+<p>The times come from a shared computer under full load and are only comparable with each other.</p>
+<h2 id="generations-learning-from-its-own-finds">Generations: learning from its own finds</h2>
+<p><code>guess/rounds.js</code> asks whether the guesser gets better past its range by learning from what it finds there, as in generations of guessing, exact checking and refitting.</p>
+<ul>
+<li><strong>Material.</strong> <code>guess/past.js</code> drew 60,000 functions with no program of up to 8 instructions, from programs drawn from the two-instruction table (about half the draws land past 8; uniform draws, one in a thousand). <code>search/deep.js --lookup</code> proved their shortest programs: 13,843 have one of 9, 14,545 of 10, 12,648 of 11, and 18,964 have none of up to 11. One function in five is held out by a hash of its table and only measured: 150 each of shortest length 9, 10, 11 and &quot;past 11&quot;, searched depth first in the lookups' order, at most 3 million programs a target, the same in every round.</li>
+<li><strong>Round 0</strong> fits the lookups on shortest programs of up to 8 and on the exact shortest programs of 9 and 10 from the material (22,746 functions). <strong>Each round</strong> then searches 1,500 functions with no program of up to 11, at most 2 million programs each, and fits again on round 0's material plus every program found so far.</li>
+</ul>
+<table>
+<thead>
+<tr><th>guesser</th><th class="num">found: 9</th><th class="num">10</th><th class="num">11</th><th class="num">past 11</th><th class="num">at the minimum: 9</th><th class="num">10</th><th class="num">11</th></tr>
+</thead>
+<tbody>
+<tr><td>shortest programs of up to 8 only</td><td class="num">99%</td><td class="num">83%</td><td class="num">49%</td><td class="num">15%</td><td class="num">88%</td><td class="num">85%</td><td class="num">85%</td></tr>
+<tr><td>round 0: also the exact programs of 9 and 10</td><td class="num">99%</td><td class="num">84%</td><td class="num">55%</td><td class="num">11%</td><td class="num">92%</td><td class="num">92%</td><td class="num">91%</td></tr>
+<tr><td>after 4 rounds, finds weighted as much as round 0</td><td class="num">92%</td><td class="num">76%</td><td class="num">47%</td><td class="num">19%</td><td class="num">81%</td><td class="num">82%</td><td class="num">85%</td></tr>
+<tr><td>after 4 rounds, finds weighted a quarter</td><td class="num">100%</td><td class="num">80%</td><td class="num">53%</td><td class="num">18%</td><td class="num">88%</td><td class="num">90%</td><td class="num">92%</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Exact material is the better teacher where it exists.</strong> The shortest programs of 9 and 10 raised the share of programs found at the proven minimum length from about 85% to 91% or more, and the share found at 11 from 49% to 55%.</li>
+<li><strong>Learning from its own finds reaches further past the range.</strong> The rounds found programs of 12 to 14 instructions for 299 to 332 of the 1,500 functions, and the share of held-out functions past 11 found rose from 11% to 17% to 19% (16 against 27 to 29 of 150). Weighted as much as everything else, those finds cost 7 to 8 points inside the range, since they are often not the shortest and pull the guesser toward its own habits; weighted a quarter, the gain past 11 stayed and the loss inside the range nearly went away.</li>
+<li><strong>The rounds dry up.</strong> New finds per round fell from 194 to 53, 9 and, after the budget doubled, 76. The search, not the guesser, sets how far each round reaches.</li>
+</ul>
+<p>From <code>runs/guess/rounds-base.txt</code>, <code>rounds.txt</code> and <code>rounds-w025.txt</code>. All functions here are functions of 4-bit inputs.</p>
+<h2 id="run-it">Run it</h2>
+<pre><code>node guess/test.js                       15 checks, a few minutes
+node guess/run.js --quick                a first table in a minute or two
+node guess/run.js                        the full table: about 35 minutes on 3 threads, most of it the
+                                         depth-first search in the two-instruction order beyond the range
+node guess/run.js --only joined,programs-joined --json runs/guess/joined.json
+node guess/run.js --merge runs/guess/full.json,runs/guess/joined.json --json runs/guess/reference.json
+node guess/far.js &quot;a*a&quot; --max-len 20 --programs 1e10      one function past the exact range, as long as it takes
+</code></pre>
+<p><code>guess/prepare.js</code> makes the test material (functions of 9 from the exact catalogue, and functions beyond it from random programs), and <code>search/deep.js --lookup</code> proves their shortest lengths.</p>
+<h2 id="files">Files</h2>
+<table>
+<thead>
+<tr><th>file</th><th>what</th></tr>
+</thead>
+<tbody>
+<tr><td><code>guess/lib.js</code></td><td>the machine on all 256 pairs at once, features, the counting and the learned guessers, the state search</td></tr>
+<tr><td><code>guess/cm.js</code></td><td>the guesser made of lookups, and its cost table for <code>dfs.js</code></td></tr>
+<tr><td><code>guess/dfs.js</code></td><td>the depth-first search that stores nothing; proves &quot;none of up to N&quot; when no branch was cut</td></tr>
+<tr><td><code>guess/run.js</code></td><td>the table; <code>--merge</code> joins runs over the same targets</td></tr>
+<tr><td><code>guess/test.js</code></td><td>the checks: the blind search is the exact search, held-out functions are held out whole, the situation read by <code>dfs.js</code> is the library's, every program found is right</td></tr>
+<tr><td><code>guess/past.js</code>, <code>guess/rounds.js</code></td><td>functions past the catalogue, and generations of search and refit</td></tr>
+</tbody>
+</table>
+<h2 id="built-on">Built on</h2>
+<ul>
+<li>Levin tree search with context models: a policy made of small tables, a convex fit, and a bound on the work in terms of the policy's probability of the solution. Orseau and Lelis, <a href="https://arxiv.org/abs/2305.16945">arXiv 2305.16945</a>.</li>
+<li>Search by cost level, the cost being the rounded -log2 of a probability: Probe, <a href="https://arxiv.org/abs/2010.08663">arXiv 2010.08663</a>; and the best order of enumeration, Fijalkow and others, <a href="https://arxiv.org/abs/2110.12485">arXiv 2110.12485</a>.</li>
+<li>A learned proposal for a superoptimizer, where a fixed bias did nearly all the work of a large network: Bunel and others, <a href="https://arxiv.org/abs/1611.01787">arXiv 1611.01787</a>.</li>
+<li>Generations of guessing, exact checking and refitting: Gauthier and Urban, <a href="https://arxiv.org/abs/2202.11908">arXiv 2202.11908</a>.</li>
+</ul>
+</article>
+<p class="note">From the project's notes, as committed. Names of machines are replaced and lines about how they are reached are left out.</p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="../data/index.html">data</a> · <a href="index.html">methods</a></footer>
+</body></html>

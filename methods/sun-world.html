@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The sun world · bitsoup lab</title>
+<meta name="description" content="bitsoup: machine evolution without a fitness function. Experiments, cluster telemetry and lab journal.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="../days/index.html">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="index.html" aria-current="page">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<p class="crumbs"><a href="index.html">Methods</a> / sun-world</p>
+<h1>The sun world</h1>
+<nav class="toc" aria-label="On this page"><a href="#the-equivalents">The equivalents</a><a href="#the-five-instructions">The five instructions</a><a href="#temperature">Temperature</a><a href="#time-and-population">Time and population</a><a href="#the-books">The books</a><a href="#the-two-origins">The two origins</a><a href="#what-the-tests-showed-before-the-start">What the tests showed before the start</a><a href="#what-is-not-known">What is not known</a><a href="#the-review-and-the-second-start">The review and the second start</a><a href="#what-carried-over-from-the-first-world">What carried over from the first world</a><a href="#limits">Limits</a></nav>
+<article class="prose"><p>The second world. It has a sun, seasons, temperature, plants, eating, the dead, infection and old age. First started on 2026-11-11 at 09:55 UTC, and started again the same day under corrected rules. The reason is in <a href="#the-review-and-the-second-start">the review</a>.</p>
+<p>The first world gave every organism a fixed allowance of activity for free. Here nothing is free. Energy enters as light, plants catch it, and anything can eat or infect anything within its reach. Everything in this note is a simulation: an organism is a string of bytes that only the soup interpreter runs.</p>
+<h2 id="the-equivalents">The equivalents</h2>
+<table>
+<thead>
+<tr><th>on a planet</th><th>here</th></tr>
+</thead>
+<tbody>
+<tr><td>a sun</td><td>light that falls on every region every round: the only real source of energy</td></tr>
+<tr><td>chemical energy</td><td>an organism's <strong>reserve</strong>, counted in bit flips. Every instruction is paid from it</td></tr>
+<tr><td>a plant</td><td>a program that contains <code>photo</code>, which catches light and adds it to the reserve</td></tr>
+<tr><td>biomass</td><td>a body holds what its mother spent while she built it, at most 12 flips per byte. An honest copy costs about 16</td></tr>
+<tr><td>a predator</td><td>a program that uses <code>eat</code> on a living neighbour: it gets half the reserve and the whole body</td></tr>
+<tr><td>a dead body</td><td>an organism that starves or dies of age leaves its body where it lay, with the body's energy still in it</td></tr>
+<tr><td>a scavenger, a decomposer</td><td>a program that uses <code>eat</code> on a dead body</td></tr>
+<tr><td>rot</td><td>a body nobody eats disappears after a while, sooner when it is warm</td></tr>
+<tr><td>a virus</td><td>a program that uses <code>infect</code> to write its own bytes into a neighbour's body</td></tr>
+<tr><td>a parasite</td><td>a program with no copy instruction of its own, which can only breed by running somebody else's code</td></tr>
+<tr><td>starving</td><td>an organism whose reserve is used up dies</td></tr>
+<tr><td>old age</td><td>a body wears out with use. After spending 200,000 flips in all, about 1,700 full turns, an organism dies and leaves its body</td></tr>
+<tr><td>inheritance</td><td>at a divide the mother gives half of her reserve to the child</td></tr>
+<tr><td>day and night</td><td>the planet turns once in 32 rounds. At night a quarter of the light remains</td></tr>
+<tr><td>seasons</td><td>the planet is tilted 30 degrees. Over a year of 8 days the sun moves north and south of the equator, so the north has summer when the south has winter</td></tr>
+<tr><td>temperature</td><td>follows the sun's height, peaks in the afternoon and runs a little behind the season. It sets the pace of life and how easily bits slip</td></tr>
+<tr><td>fertile and barren land</td><td>a fixed pattern over the world: some regions get up to seven times the light of others</td></tr>
+<tr><td>minerals</td><td>a correct, paid answer to a task releases a little energy. A side income, a few percent</td></tr>
+</tbody>
+</table>
+<h2 id="the-five-instructions">The five instructions</h2>
+<p>The 30 original instructions have 7 byte spellings each. The five new ones have 9 each.</p>
+<table>
+<thead>
+<tr><th>instruction</th><th>what it does</th><th>cost</th></tr>
+</thead>
+<tbody>
+<tr><td><code>photo</code></td><td>take up to 30 flips from the light in the region right now</td><td>1</td></tr>
+<tr><td><code>eat</code></td><td>eat whatever owns the byte at address <code>ax</code>: a living organism or a dead body</td><td>20, hit or miss</td></tr>
+<tr><td><code>infect</code></td><td>write the byte at address <code>bx</code> to address <code>ax</code>, whoever owns <code>ax</code></td><td>a copy, plus 5</td></tr>
+<tr><td><code>travel</code></td><td>leave for the neighbouring region in direction <code>ax &amp; 3</code>, reserve and all</td><td>1 + 4 per byte of body</td></tr>
+<tr><td><code>look</code></td><td><code>cx</code> = how crowded the neighbouring region in direction <code>ax &amp; 3</code> is</td><td>1 + the bits it flips</td></tr>
+</tbody>
+</table>
+<p><strong>Reach.</strong> <code>eat</code> and <code>infect</code> only work within 256 bytes of the organism's own body. They are things done to neighbours. This matters: neighbours are often relatives, so an organism that stays where it was born pays for eating them, while one that travels lands among strangers.</p>
+<p><strong>Nothing restricts who does what.</strong> An organism can be a plant, an eater, both or neither, can infect or not, and that is decided only by what its code contains. Code changes by mutation like any other bytes.</p>
+<p><strong>What cannot be eaten.</strong> A child that is still being copied is not a body yet. Without this rule every newborn of the founder that eats killed its own mother, because it lies next to her next unfinished child.</p>
+<p>Light does not keep. What nobody catches at once is gone, so plants compete for it.</p>
+<h2 id="temperature">Temperature</h2>
+<p>Each region has a warmth between 0 and 1, set by the sky every round.</p>
+<table>
+<thead>
+<tr><th></th><th>cold, warmth 0</th><th>middling</th><th>hot, warmth 1</th></tr>
+</thead>
+<tbody>
+<tr><td>the most an organism can spend in a turn</td><td>72 flips</td><td>120</td><td>168</td></tr>
+<tr><td>copy errors and stray bit flips</td><td>half as often</td><td>as in the first world</td><td>twice as often</td></tr>
+<tr><td>a dead body lasts</td><td>213 passes</td><td>128</td><td>91</td></tr>
+</tbody>
+</table>
+<p>So the cold slows life down and the heat speeds it up and scrambles it. In a test on the same dim light, 244 organisms lived in the cold and 192 at middling warmth.</p>
+<h2 id="time-and-population">Time and population</h2>
+<p>A round is 64 passes. In a pass every organism gets one turn. Living costs up to a full turn every pass whatever an organism does, so how many can live in a region follows from how much energy arrives there:</p>
+<table>
+<thead>
+<tr><th>light on the region</th><th>plants it carried in tests, at middling warmth</th></tr>
+</thead>
+<tbody>
+<tr><td>full</td><td>about 400, which is also what the memory holds</td></tr>
+<tr><td>30%</td><td>about 200</td></tr>
+<tr><td>none</td><td>0</td></tr>
+</tbody>
+</table>
+<p>A region with few inhabitants also costs little to simulate.</p>
+<h2 id="the-books">The books</h2>
+<p>Every unit of energy that appears or disappears is entered in a ledger per region:</p>
+<pre><code>sum of reserves = genesis + light + tasks + eaten + bodies + arrived - spent - wasted - left
+</code></pre>
+<p><code>node world/test.js</code> checks that this holds exactly, in whole numbers, with light, eating, scavenging, tasks and travel all active. <code>node world/inspect.js &lt;rig&gt; &lt;column,row&gt;</code> prints how far a stored region's books are off. It should say 0.</p>
+<p>Three rules keep the ledger honest beyond adding up:</p>
+<ul>
+<li><strong>A body pays out what was paid in.</strong> The energy in a body is entered as income when the body is eaten. It is what the mother spent between her <code>mal</code> and her <code>divide</code>, and never more than 12 flips per byte. So all the bodies ever eaten have paid out less than was spent. A founder's body is the one exception: it is given with the founder.</li>
+<li><strong>Nobody pays more than it has.</strong> The last instruction of a starving organism takes what is left, a turn ends when the reserve is empty, and no reserve is ever below zero.</li>
+<li><strong>Light and tasks are the only sources.</strong> <code>node world/test.js</code> runs a program that builds its children as cheaply as the machine allows and eats them at once. In the dark it starves in the first round.</li>
+</ul>
+<h2 id="the-two-origins">The two origins</h2>
+<table>
+<thead>
+<tr><th>rig</th><th>founder</th></tr>
+</thead>
+<tbody>
+<tr><td>rig A</td><td>a <strong>plant</strong>: the old ancestor with one <code>photo</code> in its copy loop</td></tr>
+<tr><td>rig B</td><td>a <strong>grazer</strong>: the same plant, which once in its life eats whatever lies directly behind its own body</td></tr>
+</tbody>
+</table>
+<p>They differ on purpose. On rig A eating has to evolve by itself, so that rig is the control. Neither founder can infect, and nothing placed by hand is a virus or a pure predator. Each founder is put on the most fertile land within 8 regions of column 6044 and 6244, row 1500, which is 24 degrees north: far enough from the equator to have real seasons.</p>
+<h2 id="what-the-tests-showed-before-the-start">What the tests showed before the start</h2>
+<ul>
+<li>A founder that cannot catch light dies out in the first round.</li>
+<li>Plants live through the nights: the population falls to a third in the dark and recovers.</li>
+<li><strong>Eating evolved by itself.</strong> In a test world seeded with plants only, 95% of all organisms both caught light and ate by round 171. That was under an earlier rule where <code>eat</code> could hit anyone in the region, so eating a stranger was pure gain and everybody ended up doing it. The reach rule was added because of that result.</li>
+<li><strong>Predators arise by one bit flip.</strong> Several spellings of <code>photo</code> are one bit away from <code>eat</code>. A plant whose <code>photo</code> flips stops catching light and instead eats the neighbour behind each child it finishes. In single-region tests this happened within six rounds.</li>
+<li><strong>Scavenging appeared quickly under dim light</strong>, where many starve and bodies lie around.</li>
+<li>Two pure predators I wrote by hand both died out, and so did a hunter that ate once at birth.</li>
+<li>Eating could not pay at first. Plants live hand to mouth with almost no reserve, and I had valued a body at a quarter of what it cost to build. Raising that to three quarters is what opened the niche.</li>
+</ul>
+<h2 id="what-is-not-known">What is not known</h2>
+<ul>
+<li>Whether anything like a virus will arise. The world has the means: <code>infect</code> writes into a neighbour's body, and nothing stops a program from running a neighbour's code. I did not write a working virus, and none of the tests produced one.</li>
+<li>Whether predators and scavengers last. In the one test world run under the final rules, 12 by 16 regions from a plant founder, eating arose by itself and 39% of organisms ate by round 100. Then it declined, and by round 300 plants were 98%. About 23,000 dead bodies lay uneaten, and writes into neighbours' bodies ran at 2,000 to 19,000 per round. So the reach rule does make eating neighbours costly, perhaps too costly. One small world is not enough to say what the large one will do.</li>
+</ul>
+<h2 id="the-review-and-the-second-start">The review and the second start</h2>
+<p>The first start ran from 09:55 to 12:10 UTC on 2026-11-11. While it ran, seven independent readers went through the code, and every finding was then checked by two more, one trying to refute it and one trying to reproduce it. Nineteen defects were confirmed. Four were in the rules of the world, so the world was stopped and started again from its founders. The first run is kept: its data is in <code>bitsoup-sun-run1</code> on each rig and its code is the git tag <code>sun-v1</code>.</p>
+<table>
+<thead>
+<tr><th>the first run at its stop</th><th class="num">rig A, from a plant</th><th class="num">rig B, from a grazer</th></tr>
+</thead>
+<tbody>
+<tr><td>round</td><td class="num">417</td><td class="num">98</td></tr>
+<tr><td>inhabited regions</td><td class="num">28,454</td><td class="num">16,319</td></tr>
+<tr><td>organisms</td><td class="num">12,681,137</td><td class="num">5,975,257</td></tr>
+<tr><td>plants only, a round or two earlier</td><td class="num">94%</td><td class="num">27%</td></tr>
+<tr><td>plants that also eat</td><td class="num">6%</td><td class="num">73%</td></tr>
+<tr><td>eaten alive in one round</td><td class="num">32,518</td><td class="num">4,188,622</td></tr>
+<tr><td>income from eating</td><td class="num">0.1%</td><td class="num">14.4%</td></tr>
+</tbody>
+</table>
+<p>The second start was at 12:11 UTC.</p>
+<h3 id="what-was-wrong-with-the-rules">What was wrong with the rules</h3>
+<ul>
+<li><strong>Energy from nothing.</strong> Eating a body paid a fixed 12 flips per byte whatever the body had cost. A program could write one byte of a child over and over, which costs almost nothing, divide, and eat the newborn: 840 flips in for about 480 spent. Such a program lived in total darkness for as long as it was run. Now a body holds what was spent on it.</li>
+<li><strong>Spending what was given away.</strong> A turn's allowance was fixed when the turn began. A mother who gave half her reserve to a child went on spending the whole allowance, so reserves went below zero and the debt vanished in the books as negative waste. In one test 8,398 of 14,577 organisms that starved died in debt.</li>
+<li><strong>Dead bodies counted as neighbours.</strong> <code>look</code> saw a region as inhabited while only bodies lay there.</li>
+<li><strong>Time could stand still.</strong> When a rig wrote too much to its disk, rounds were made longer, up to 256 times, under one sample of the sky. At 32 times a region would have stayed at one hour of the day for ever, and at 256 times in one season. This never happened in the first run, which was still small. Rounds now always have 64 passes, and a rig that writes too much waits in real time instead.</li>
+</ul>
+<h3 id="the-debt-was-a-hidden-subsidy">The debt was a hidden subsidy</h3>
+<p>Fixing the second point changed the ecology more than expected, and it is the most useful thing the review found. The debt was small, 0.03% of all light, but it went to poor mothers at the moment they bred. Without it breeding is harder for the poor, and in a dim region the ordinary plants are more easily displaced by a type that breeds badly or not at all and then dies out. In single regions cut off from the world, run for 300 rounds:</p>
+<table>
+<thead>
+<tr><th>rules</th><th>regions that ended empty or without births</th></tr>
+</thead>
+<tbody>
+<tr><td>the first run's rules, debt allowed</td><td>4 of 24</td></tr>
+<tr><td>corrected, and a mother's turn cut short at a birth</td><td>4 of 8</td></tr>
+<tr><td>corrected, a turn ends when the reserve is empty (what runs now)</td><td>11 of 24</td></tr>
+<tr><td>corrected, every turn runs to full length while the reserve lasts</td><td>5 of 24</td></tr>
+</tbody>
+</table>
+<p>In a connected world an empty region is settled again from next door. Four worlds of 48 regions under the rules that run now, two from a plant and two from a grazer, all had 42 to 48 regions inhabited after 310 to 400 rounds, with 13,000 to 17,000 organisms. Plants that never eat made up 4% to 92% of them depending on the world, and eating brought 0.1% to 21% of all income. The fourth rule in the table kept more single regions alive but gave one kind of organism everywhere: over 99% both caught light and ate, at half the population. The third was chosen because it leaves more than one way to live.</p>
+<h3 id="old-age">Old age</h3>
+<p>Tracing the regions that died showed a second problem that the first run's rules had as well. Where light is short a region never fills, so the reaper, which only acts when room is needed, never acts. Then nothing dies except by hunger, and a program that catches light and never breeds lives for ever. In one test 39 such organisms held a region for 200 rounds with no births, each with close to a million flips in reserve. Where nothing dies nothing is selected. So bodies now wear out: after spending 200,000 flips an organism dies and leaves its body. In the healthy test worlds almost nobody reaches that age.</p>
+<h3 id="what-was-wrong-with-the-machinery">What was wrong with the machinery</h3>
+<table>
+<thead>
+<tr><th>defect</th><th>now</th></tr>
+</thead>
+<tbody>
+<tr><td>one malformed line on the link port stopped a node without saving</td><td>a line that is not understood closes that connection and nothing else</td></tr>
+<tr><td>travellers were forgotten by the sender as soon as they were written to the socket. In the first run about 40% of those sent between the rigs never arrived</td><td>travellers go in numbered batches. The sender keeps a batch until the receiver confirms it and sends it again after a reconnect, and the receiver ignores a batch it has seen</td></tr>
+<tr><td>travellers arriving during a stop were dropped</td><td>a stopping node closes its door first, then stores</td></tr>
+<tr><td>after a worker died, the next start found a census without regions and ran an empty world for ever</td><td>an unclean stop is detected, and the next start reads the region files themselves. See <a href="world.html#stops-and-crashes">WORLD.md</a></td></tr>
+<tr><td>a reboot or <code>pkill node</code> killed the workers before they could store anything</td><td>the workers ignore the signal and wait for the master</td></tr>
+<tr><td>a leftover <code>node.pid</code> could block a restart, and <code>stop</code> could signal a stranger</td><td>the process behind the number is checked</td></tr>
+<tr><td>a read error on a region file threw the file away</td><td>only a damaged file is set aside. Any other error stops the node and leaves the file alone</td></tr>
+<tr><td>once a worker had more regions than fit in RAM, it wrote every region every round</td><td>it writes only those that do not fit</td></tr>
+<tr><td>a stop before the first round lost the founder</td><td>the founder is stored until it has been placed</td></tr>
+</tbody>
+</table>
+<h2 id="what-carried-over-from-the-first-world">What carried over from the first world</h2>
+<p>Travel, <code>look</code>, clans, miles, the rule that age travels and keeps counting on the road, the tasks and speech, the link between the rigs, the storage of regions on the SSDs, and all the tools.</p>
+<p>What changed: the tasks no longer multiply an organism's turns. They pay a little energy instead. Whether an organism &quot;holds&quot; a task is still tracked, so speech can still be measured.</p>
+<h2 id="limits">Limits</h2>
+<ul>
+<li>Each rig has its own clock, so the two rigs are at different times of day and, later, of the year.</li>
+<li>There is no defence against being eaten or infected, and no instruction senses light or temperature.</li>
+<li>A single region cut off from the rest often ends empty. The world relies on travel to settle it again. Whether that holds at full size is not known.</li>
+<li>A crash leaves regions at slightly different times.</li>
+<li>Day length does not change with the season. Only the sun's height does.</li>
+<li>The numbers in <code>world.json</code> under <code>energy</code> and <code>sun</code> were tuned by hand on single regions. Different values would give a different ecology.</li>
+</ul>
+</article>
+<p class="note">From the project's notes, as committed. Names of machines are replaced and lines about how they are reached are left out.</p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="../data/index.html">data</a> · <a href="index.html">methods</a></footer>
+</body></html>

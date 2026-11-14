@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The world · bitsoup lab</title>
+<meta name="description" content="bitsoup: machine evolution without a fitness function. Experiments, cluster telemetry and lab journal.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="../days/index.html">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="index.html" aria-current="page">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<p class="crumbs"><a href="index.html">Methods</a> / world</p>
+<h1>The world</h1>
+<nav class="toc" aria-label="On this page"><a href="#shape">Shape</a><a href="#travel">Travel</a><a href="#time">Time</a><a href="#who-does-what-on-a-rig">Who does what on a rig</a><a href="#where-a-region-is-kept">Where a region is kept</a><a href="#night-and-the-guardrails">Night and the guardrails</a><a href="#stops-and-crashes">Stops and crashes</a><a href="#rules-fingerprint">Rules fingerprint</a><a href="#what-it-costs">What it costs</a><a href="#limits">Limits</a></nav>
+<article class="prose"><p>One world spread over both rigs. Organisms live in regions, move between them, and cross the network cable between the machines. This note says how the world is laid out and how it is run. The rules of life in it, light, eating and the dead, are in <a href="sun-world.html">SUN.md</a>. How a region is computed is in <a href="engine.html">ENGINE.md</a>.</p>
+<p>Everything here is a simulation: an organism is a string of bytes that only the soup interpreter runs. It cannot touch files, the network or anything else on the rigs. &quot;Travelling over the connection&quot; means that one of our own processes hands a record to another of our own processes.</p>
+<h2 id="shape">Shape</h2>
+<table>
+<thead>
+<tr><th></th><th></th></tr>
+</thead>
+<tbody>
+<tr><td>Region</td><td>one 64 KB soup, holding up to about 400 organisms</td></tr>
+<tr><td>World</td><td>a torus of 6,784 by 4,096 regions: 27.8 million regions</td></tr>
+<tr><td>rig A</td><td>columns 0 to 6143, 25.2 million regions</td></tr>
+<tr><td>rig B</td><td>columns 6144 to 6783, 2.6 million regions</td></tr>
+<tr><td>North and south</td><td>wrap around inside a rig</td></tr>
+<tr><td>East and west</td><td>a rig's last column borders the other rig's first column, on both sides. Crossing that border goes over TCP</td></tr>
+</tbody>
+</table>
+<p>A region exists only once somebody has entered it. Unexplored land costs nothing. Each rig stops claiming new land when its free disk space falls below a reserve, 200 GB on rig A and 40 GB on rig B.</p>
+<p>Every organism carries its clan, 0 for the rig A origin and 1 for the rig B origin, and the number of moves its line has made.</p>
+<h2 id="travel">Travel</h2>
+<table>
+<thead>
+<tr><th>instruction</th><th>what it does</th><th>cost</th></tr>
+</thead>
+<tbody>
+<tr><td><code>travel</code></td><td>the organism leaves for the neighbouring region in direction <code>ax &amp; 3</code>: north, east, south, west</td><td>1 + 4 flips per byte of body. One that cannot pay stays</td></tr>
+<tr><td><code>look</code></td><td><code>cx</code> = how crowded the neighbouring region in direction <code>ax &amp; 3</code> is, from 0 for nobody alive to 15 for full</td><td>1 + the bits it flips</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Nothing is translated.</strong> Registers, stack, task streaks, merit and the energy reserve go along, but addresses the organism had noted stay as they were. Code keeps working after a move only if it finds itself again.</li>
+<li><strong>Age travels.</strong> The reaper kills the oldest, counted in births around you. A traveller arrives as old as it left.</li>
+<li><strong>The road counts.</strong> A traveller is handed over when the round ends. It ages for the rest of that round as if it had stayed.</li>
+<li><strong>Arriving is like being born.</strong> If the region is full, the reaper makes room. If it cannot, the traveller is lost.</li>
+<li><code>look</code> across the border between the rigs sees the other side one round late.</li>
+</ul>
+<p>No founder contains <code>travel</code>. It appears by itself within the first rounds.</p>
+<h2 id="time">Time</h2>
+<ul>
+<li>A round is 64 passes. In a pass every organism gets one turn. After a round those who left are delivered.</li>
+<li>The planet turns once in 32 rounds, and a year is 8 days.</li>
+<li><strong>Inside a rig a round is deterministic.</strong> The same configuration gives byte-identical region files, whichever engine steps a region, and a run that is stopped and resumed gives the same files as one that was not.</li>
+<li><strong>The rigs do not wait for each other.</strong> Each has its own clock, so they are at different times of day and year, and when a traveller from the other rig arrives depends on real time. The world as a whole is not reproducible.</li>
+<li>A rig's rounds get longer as its world grows.</li>
+</ul>
+<h2 id="who-does-what-on-a-rig">Who does what on a rig</h2>
+<table>
+<thead>
+<tr><th>process</th><th>file</th><th>what it does</th></tr>
+</thead>
+<tbody>
+<tr><td>the node, one per rig</td><td><code>world/node.js</code></td><td>the sky, the rounds, who steps which region, the link to the other rig, checkpoints, the reports</td></tr>
+<tr><td>CPU workers, 12 on rig A and 24 on rig B</td><td><code>world/worker.js</code> with <code>world/region.js</code></td><td>keep their regions in RAM as packed bytes and run whole rounds on them with the C engine</td></tr>
+<tr><td>card workers, one per graphics card</td><td><code>world/gpuworker.js</code> with <code>gpu/host.py</code></td><td>keep their regions in video memory and step them there</td></tr>
+</tbody>
+</table>
+<p>A new region goes to whoever is least loaded for its speed and stays there for the run. Every engine gives the same bytes, so it does not matter who gets it.</p>
+<h2 id="where-a-region-is-kept">Where a region is kept</h2>
+<p>A region is kept as packed bytes: everything it is between two rounds, in one piece of about 125 KB under rules 6 (135 to 180 KB under rules 4). <a href="engine.html">ENGINE.md</a> says what is in them.</p>
+<table>
+<thead>
+<tr><th>place</th><th>how many regions</th></tr>
+</thead>
+<tbody>
+<tr><td>video memory</td><td>at most 76,000 and 33,300 on the two cards of rig A and 33,300 on each of the three of rig B, in slots of 192 KB. A card of rig B takes 0.4 times what its CPU workers hold, so it fills later</td></tr>
+<tr><td>RAM of the CPU workers, packed bytes ready to run</td><td>every other region: 58,000 on rig A and 62,000 on rig B on 2026-11-11, in 11 and 12 GB. The budget is 24 GB on each rig, about 125,000 regions</td></tr>
+<tr><td>RAM of the CPU workers, the same deflated</td><td>what does not fit above, about 35 KB a region: 9.6 GB on rig A and 12 GB on rig B, about 300,000 regions each. Using one costs a few milliseconds a round and no disk</td></tr>
+<tr><td>SSD</td><td>every region at a checkpoint and at a stop, and whatever fits nowhere above</td></tr>
+</tbody>
+</table>
+<p>The budgets are <code>hotMB</code> and <code>ramTierMB</code> per worker in <code>world/world.json</code>. Only when a rig has more regions than all of that holds are the rest read from and written to the SSD every round. A write budget then protects the drives: 500 GB per day on rig A and 120 GB per day on rig B since 2026-11-12, the user's choice when the worlds outgrew RAM (100 and 30 before). It can be changed while a node runs: change <code>writeBudgetGBPerDay</code> in world.json, push, and send the node <code>kill -USR2 $(cat bitsoup-sun/&lt;node&gt;/node.pid)</code>. A round that writes more than its share makes the node wait before the next one. The wait is real time only: the world does not notice, but it runs slower. <code>status</code> shows what the workers hold and the wait.</p>
+<h2 id="night-and-the-guardrails">Night and the guardrails</h2>
+<p><strong>What happened on 2026-11-12.</strong> On the first day that the card engine ran every card at full power, both rigs dropped off the network. Both machines computed on, out of reach, until they were switched off and on the next morning. Their kernel logs say what happened, and it took a different course on each:</p>
+<ul>
+<li><strong>rig B, 13:50:59 and 16:50:09 UTC: everything behind its chipset.</strong> The same course twice. What the chipset sent began to arrive damaged: the kernel logged corrected bus errors at the three network chips behind it (the port in use, the unused WiFi card, the unused second port) and at the processor's end of the link to the chipset. They grew for 53 and for 19 minutes, the first time in two swells with a lull between, to 612 and 1,398 reports a minute. Then the chipset itself reported a fatal error, the kernel shut the link off (<code>DPC: containment event ... ERR_FATAL received from 0000:01:00.0</code>) and could not set the devices behind it up again (<code>AER: device recovery failed</code>: four of their drivers cannot recover). Network, USB and SATA were gone. Processor, memory, the three cards and the drives hang off the processor itself and worked on. That boot had run six days without one such line, about one of them under the world's load.</li>
+<li><strong>What the two runs share.</strong> Three cards and the processor at full power together: the first error came 27 and 20 minutes after both were at full load, the failure after 80 and 40. The card at bus 42:00.0 stood at 81 to 84 degrees with its fan at 96 to 99%, the processor at 67.3 to 67.6 of its 68 degrees. The same morning 86 minutes of full card power with the processor half busy, that card at 76 on average, gave no error, and no minute in which it stayed under 78 at full power had one. So a state like heat decides whether errors can occur. Inside that state the errors follow the load to the second: they come in the seconds after cards and processor begin a round together, and they pause when the processor's workers pause. Which part gives way (the chipset, its supply, its clock, a power supply that answers load steps worse when hot) is open: the board's temperatures and voltages are not read.</li>
+<li><strong>Link power saving is not it.</strong> ASPM is off on every link of rig B. The kernel option <code>pcie_aspm=off</code> would do harm there: with it the kernel gives up its error log, its error counters and its containment.</li>
+<li><strong>rig A, 17:33:25 UTC: its network chip.</strong> The Intel I226-V stopped answering (<code>igc 0000:08:00.0 eno1: PCIe link lost, device now detached</code>). The 4090 behind the same chipset and everything else worked on, and the machine ran cool. It is a known failure of this chip family on ASUS boards of this kind, tied to link power saving (ASPM L1), which is switched on for that chip. The same machine dropped the same way on 2026-10-06; a unit written then, which switched L1 off at every boot, did not survive the fresh installation of 6 November.</li>
+</ul>
+<p>In the fifth start nothing was lost: each node's guard stopped it cleanly ten minutes after its rig's network had gone. The first disconnect, during the fourth start, had cost rig B's node what it held in memory; that was before the guards watched the network.</p>
+<p><strong>The layers that stand between such a day and the world now:</strong></p>
+<ol>
+<li><strong>Night by rest</strong> (<code>world/night.js</code>, described in <code>RULES7.md</code>). The node itself looks at its machine after every round. On rig B night falls on all four bands when any of its cards has been at 77 degrees, or when the kernel counts a single new bus error. The nodes then work a fifth of the time, for five minutes at least, until no card passes 75 while they rest and no bus error has come for ten minutes. In the rehearsal on its three cards a day lasted four minutes and a night five and a half, with the cards cooling from 77 to under 50 degrees. rig A's limits are far above where it runs. The limits are <code>night</code> in <code>world/world.json</code>; after a change there, <code>kill -USR2</code> of a node's process makes it read them again.</li>
+<li><strong>The guard's bus case.</strong> If the errors grow all the same (20 within a minute or 50 within five), the guard of each card's node stops it cleanly at once. The guard of the processor's node stops it if the errors still come that fast three minutes later, or at once at 100 within a minute. In the two recorded failures that line was crossed 39 and 14 minutes before the link went (5 minutes before, counted from the first one's lull). The network still works then, so the nodes can be started again from the PC. rig A's kernel keeps no such count, and its kind of failure gives no warning.</li>
+<li><strong>The guard's network case.</strong> Ten minutes without the router or the other rig: a clean stop of every node.</li>
+<li><strong>A checkpoint every two hours</strong>, for whatever stops a machine at once.</li>
+</ol>
+<p><strong>What only hands can do.</strong> These are settings and hardware of the user's machines, and the user's to change.</p>
+<ul>
+<li><em>rig A:</em> link power saving off for the network chip at every boot. Writing 0 into <code>/sys/class/net/eno1/device/link/l1_aspm</code> does it until the next boot (the unit of 7 October did that at every boot); the kernel option <code>pcie_aspm.policy=performance</code> or the BIOS do it for good. Not <code>pcie_aspm=off</code>: that option tells the kernel to leave what the BIOS set, so L1 stays on, and it takes the switch in <code>/sys</code> away. Afterwards <code>lspci -vv</code> has to show <code>LnkCtl: ASPM Disabled</code> for the chip (08:00.0) and its port (04:0a.0). By a fleet count of these chips it makes such drops about ten times rarer; it is no certain cure. A chip that has dropped is usually brought back without switching the machine off: <code>echo 1 &gt; /sys/bus/pci/devices/0000:08:00.0/remove</code>, then <code>echo 1 &gt; /sys/bus/pci/rescan</code>, as root.</li>
+<li><em>rig B:</em> a look into the case. The card at bus 42:00.0 (the Gigabyte one) reaches 83 degrees with its fan at its limit where the other two run at 61 and 68 with fans at 30 and 52%, and idles at 55 where they idle at 35: its cooler or its place needs attention, and the case needs more air than it has. A power limit on the cards (<code>nvidia-smi -pl</code>, 100 W at the lowest) takes heat and load step away at once. The BIOS can run the chipset's link at a lower speed (Advanced, AMD PBS, &quot;Promontory PCIe Switch&quot;: Gen2), which was the reported cure for errors on this very port in 2017. The board's own temperatures and voltages can be read once the driver <code>nct6775</code> is loaded, which would tell heat from supply. A network adapter on one of the processor's own USB ports does not pass the chipset, so the rig would stay in reach when the chipset's devices go.</li>
+</ul>
+<h2 id="stops-and-crashes">Stops and crashes</h2>
+<ul>
+<li><strong>A clean stop is exact.</strong> <code>stop</code> lets each node finish its round, close its door to the other rig, store every region and write its state. The next start continues as if there had been none.</li>
+<li><strong>Any other end is found out.</strong> If the file <code>running</code> is there at a start, the node does not trust its own notes. It reads every region file to learn who lives where and how far each region has been run, and goes on from that. Regions that were only in memory fall back to their last stored state, at most six hours old, and travellers on the road are lost. It never places a second founder in a world that has life. <code>status</code> shows how often this has happened.</li>
+<li><strong>A stop can take long.</strong> A round cannot be interrupted, and then every region has to be written.</li>
+<li><strong>A node needs the engine it was started with.</strong> Packed files are read by the C engine only. A node without <code>engine/soup.wasm</code> stops when it meets one, and a file written under other rules stops a worker too. Neither is set aside as damaged.</li>
+<li><code>status</code> says so in capital letters when a node is not running.</li>
+</ul>
+<h2 id="rules-fingerprint">Rules fingerprint</h2>
+<p>A world has to go on under the rules it was stored under, and both rigs have to run the same rules. So each node works out a fingerprint of its rules at every start: 16 characters, from <code>world/rules.js</code>.</p>
+<ul>
+<li><strong>What it covers.</strong> The number of the rules. What <code>world.json</code> fixes: the energy settings, the settings of the sky, the physics, the seed, the height, and how many columns each node has. And what the rules do: a probe runs four founders for three rounds, by the rules as <code>world/land.js</code> defines them, and hashes what the regions then hold, with five readings of the sky. It takes a fraction of a second.</li>
+<li><strong>What it leaves out.</strong> A rebuilt engine, a changed comment, another host, port, number of workers or cards: the world stays the same, and so does the fingerprint. The probe is small, so a changed rule can escape it. It does not reach the reaper in a full region, or a paid answer to a task. The number of the rules has to go up with every change of a rule.</li>
+<li><strong>Where it is.</strong> In <code>state.json</code>, in <code>status.json</code>, and in the line a node logs when it starts. <code>status</code> shows it for every node, and says so in capital letters when they are not the same. <code>node world/rules.js</code> prints the fingerprint of <code>world/world.json</code> under the code at hand.</li>
+<li><strong>A refused start.</strong> A node whose <code>state.json</code> names another fingerprint does not start. It names both fingerprints and changes nothing. It means that the rules, the energy or sky settings, or the layout of the nodes changed since the world was stored. A new start from the founders is the clean way.</li>
+<li><strong>Going on all the same.</strong> <code>--accept-rules</code> on the node's command line continues the stored world under the present rules and stores the new fingerprint. From the PC: <code>BITSOUP_ACCEPT_RULES=1 bash world/ctl.sh start</code>. It is for one start, after a change that is meant. The world is then no longer one run under one set of rules, and its record should say so. After a change of the height or of the nodes' columns it is not safe: the region files and <code>state.json</code> are laid out by them.</li>
+<li><strong>A refused neighbour.</strong> Two nodes show each other the fingerprint when they connect, inside the encrypted link and once the caller has shown that it knows the secret. If they differ, no link comes up and no traveller crosses. <code>status</code> then shows the link as <code>other rules</code> instead of <code>down</code>, and each log says so once a minute, with both fingerprints. Travellers are treated as for any link that is down.</li>
+<li><strong>From before the fingerprint.</strong> A <code>state.json</code> that names none is taken as it is, and names one from then on. A node that runs code from before the fingerprint gets no link to one that has it.</li>
+<li><strong>Upgrading.</strong> <code>bash world/ctl.sh upgrade</code> stops every node, pushes, checks that every rig has the PC's commit, starts, and waits up to 15 minutes until every node has run a round and has its link. When a step does not hold it says which, and starts nothing more.</li>
+</ul>
+<h2 id="what-it-costs">What it costs</h2>
+<ul>
+<li><strong>CPU.</strong> Every thread on both rigs runs at full load while the world runs. The processes are niced, so other work gets priority, but it slows the world down.</li>
+<li><strong>Graphics cards.</strong> All five cards are busy and their memory is nearly full. Nothing else fits on them while the world runs with them.</li>
+<li><strong>SSD wear.</strong> A checkpoint every six hours writes every inhabited region, about 20 GB per rig at 440,000 regions (every two hours until 2026-11-12, the user's choice to spare the drives). When only the node program dies, its workers store their regions anyway; a power cut loses up to six hours. <code>checkpointMinutes</code> in world.json, read again on <code>kill -USR2</code> like the write budget. Paging, held to the write budget, only begins when a rig's memory is full. rig B has a 250 GB Samsung 970 EVO, which is the drive to watch.</li>
+</ul>
+<h2 id="limits">Limits</h2>
+<ul>
+<li>The world can grow to 27.8 million regions. The rigs hold about 900,000 in video memory and RAM. The README says what comes next.</li>
+<li>Travellers on their way between regions are held in RAM by each node.</li>
+<li>The second 250 GB drive in rig B is unused.</li>
+<li>The prices of the tasks come from a sweep of the original 30-instruction machine and have not been re-derived for the five new instructions.</li>
+</ul>
+</article>
+<p class="note">From the project's notes, as committed. Names of machines are replaced and lines about how they are reached are left out.</p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="../data/index.html">data</a> · <a href="index.html">methods</a></footer>
+</body></html>

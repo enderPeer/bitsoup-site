@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The first world · bitsoup lab</title>
+<meta name="description" content="bitsoup: machine evolution without a fitness function. Experiments, cluster telemetry and lab journal.">
+<meta name="built" content="2026-11-14T18:12:57Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="../days/index.html">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="index.html" aria-current="page">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<p class="crumbs"><a href="index.html">Methods</a> / first-world</p>
+<h1>The first world</h1>
+<nav class="toc" aria-label="On this page"><a href="#shape">Shape</a><a href="#the-two-new-instructions">The two new instructions</a><a href="#time">Time</a><a href="#what-it-costs">What it costs</a><a href="#limits">Limits</a><a href="#how-it-ended">How it ended</a></nav>
+<article class="prose"><p><em>Kept for the record. This describes the first world, which ran from 2026-11-10 to 2026-11-11 09:50 UTC and is stopped. The world that runs now is described in <a href="world.html">docs/WORLD.md</a>.</em></p>
+<p>One world spread over both rigs. Its memory is their SSD space, and organisms can move through it, including across the network cable between the machines.</p>
+<p>Started on 2026-11-10. Everything here is a simulation: an organism is a string of bytes that only the soup interpreter runs. It cannot touch files, the network or anything else on the rigs. &quot;Travelling over the connection&quot; means that one of our own processes hands a record to another of our own processes.</p>
+<h2 id="shape">Shape</h2>
+<table>
+<thead>
+<tr><th></th><th></th></tr>
+</thead>
+<tbody>
+<tr><td>Region</td><td>one 64 KB soup, the same machine as <code>soup/alife.js</code>, holding about 400 organisms when full</td></tr>
+<tr><td>World</td><td>a torus of 6,784 by 4,096 regions: 27.8 million regions, 1.82 TB of soup</td></tr>
+<tr><td>rig A</td><td>columns 0 to 6143, 25.2 million regions</td></tr>
+<tr><td>rig B</td><td>columns 6144 to 6783, 2.6 million regions</td></tr>
+<tr><td>North and south</td><td>wrap around inside a rig</td></tr>
+<tr><td>East and west</td><td>a rig's last column borders the other rig's first column, on both sides. Crossing that border goes over TCP</td></tr>
+</tbody>
+</table>
+<p>A region exists as a file only once somebody has entered it. Unexplored land costs nothing. A settled region is 34 to 58 KB on disk. Each rig stops claiming new land when its free disk space falls below a reserve, 200 GB on rig A and 40 GB on rig B.</p>
+<p>Life starts from one plain ancestor per rig, 100 columns from their shared border: at column 6044 on rig A and column 6244 on rig B, both in row 2048. Every organism carries its clan, 0 for the rig A origin and 1 for the rig B origin, so it stays visible where each population came from.</p>
+<h2 id="the-two-new-instructions">The two new instructions</h2>
+<p>The original machine has 30 instructions with 8 byte spellings each, which leaves 16 byte values over. They used to be a ninth spelling of the first 16 instructions. Here they spell two new ones, so nothing else in the machine changes.</p>
+<table>
+<thead>
+<tr><th>instruction</th><th>what it does</th><th>cost</th></tr>
+</thead>
+<tbody>
+<tr><td><code>travel</code></td><td>the organism leaves for the neighbouring region in direction <code>ax &amp; 3</code>: north, east, south, west</td><td>1 + 4 bit flips per byte of body</td></tr>
+<tr><td><code>look</code></td><td><code>cx</code> = how crowded the neighbouring region in direction <code>ax &amp; 3</code> is, from 0 for uninhabited to 15 for full</td><td>1 + the bits it flips</td></tr>
+</tbody>
+</table>
+<p><code>look ifz travel</code> reads: go there if nobody lives there.</p>
+<p>Rules that keep travel honest:</p>
+<ul>
+<li><strong>Nothing is translated.</strong> Registers, stack, task streaks and merit go along, but addresses the organism had noted stay as they were. Code keeps working after a move only if it finds itself again.</li>
+<li><strong>Age travels.</strong> The reaper kills the oldest, counted in births around you. A traveller arrives as old as it left. Without this rule, moving was an escape from the reaper and everything became a permanent nomad.</li>
+<li><strong>The road counts.</strong> A traveller is handed over when the round ends. It ages for the rest of that round as if it had stayed. Without this rule, leaving early stopped the clock.</li>
+<li><strong>Arriving is like being born.</strong> If the region is full, the reaper makes room. If it cannot, the traveller is lost.</li>
+</ul>
+<p>Neither the ancestor nor anything placed by hand contains <code>travel</code> or <code>look</code>. Travel appeared by itself within the first 250,000 instructions.</p>
+<h2 id="time">Time</h2>
+<p>Time moves in rounds. In a round every inhabited region of a rig runs 1,000,000 instructions, then the organisms that left are delivered.</p>
+<ul>
+<li><strong>Inside a rig a round is deterministic.</strong> The same configuration gives byte-identical region files, and a run that is stopped and resumed gives the same files as one that was not.</li>
+<li><strong>The rigs do not wait for each other.</strong> When a traveller from the other rig arrives depends on real time, so the world as a whole is not reproducible.</li>
+<li><strong>Time slows as the world fills.</strong> A rig's instructions per second are fixed, and every inhabited region gets the same share. Ten times the regions means rounds ten times as long.</li>
+</ul>
+<h2 id="what-it-costs">What it costs</h2>
+<ul>
+<li><strong>CPU.</strong> Every thread on both rigs runs at full load for as long as the world runs. The processes are niced, so other work on the rigs gets priority, but anything else running there slows the world down.</li>
+<li><strong>SSD wear.</strong> While a rig's world fits in RAM, the SSD only sees a checkpoint every two hours. Once it does not fit, every region is written once per round. A write budget, 100 GB per day on rig A and 30 GB per day on rig B, then makes rounds longer instead of writing faster. rig B has a 250 GB Samsung 970 EVO, which is the drive to watch.</li>
+<li><strong>A crash loses time.</strong> A clean stop is exact. A crash or power cut loses what happened in RAM since the last checkpoint, and travellers in transit at that moment can be lost or doubled.</li>
+</ul>
+<h2 id="limits">Limits</h2>
+<ul>
+<li>Travellers in transit at the end of a round are held in RAM by each rig's master process, about 20 KB per inhabited region. That is fine for hundreds of thousands of regions per rig. Millions would need them on disk.</li>
+<li><code>look</code> across the network border sees the other side one round late, and sees nothing until the link is up.</li>
+<li>The second 250 GB drive in rig B is unused.</li>
+<li>The prices of the tasks come from a sweep of the original 30-instruction machine. <code>travel</code> and <code>look</code> are not data instructions, so the prices still apply, but that has not been re-derived.</li>
+</ul>
+<h2 id="how-it-ended">How it ended</h2>
+<p>It was stopped cleanly on 2026-11-11 at 09:50 UTC and is kept. Its data is in <code>bitsoup-world</code> on each rig, about 4 GB in all.</p>
+<table>
+<thead>
+<tr><th>at the stop</th><th class="num">rig A</th><th class="num">rig B</th></tr>
+</thead>
+<tbody>
+<tr><td>round</td><td class="num">174</td><td class="num">148</td></tr>
+<tr><td>inhabited regions</td><td class="num">49,046</td><td class="num">40,626</td></tr>
+<tr><td>organisms</td><td class="num">22,809,942</td><td class="num">17,886,471</td></tr>
+<tr><td>of the rig A clan</td><td class="num">22,809,942</td><td class="num">620,680</td></tr>
+<tr><td>hold the speech task</td><td class="num">10,849,770</td><td class="num">8,481,467</td></tr>
+<tr><td>instructions run</td><td class="num">3,330 G</td><td class="num">2,058 G</td></tr>
+</tbody>
+</table>
+<p>Its code is the git tag <code>world-v1</code>, and its configuration is <code>world/world.json</code> at that tag. To resume it, stop the running world, check out the tag on the PC, push to the rigs and start.</p>
+</article>
+<p class="note">From the project's notes, as committed. Names of machines are replaced and lines about how they are reached are left out.</p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-14T18:12:57Z">2026-11-14 18:12 UTC</time> · last reading from the rigs 2026-11-14 18:12 UTC · <a href="../data/index.html">data</a> · <a href="index.html">methods</a></footer>
+</body></html>
