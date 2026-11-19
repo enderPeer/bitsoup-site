@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>15 November 2026 · bitsoup lab</title>
+<meta name="description" content="The sun world, fifth start, started on 12 November 2026, stood still all day: none of its nodes was running.">
+<meta name="built" content="2026-11-19T13:58:21Z">
+<script>try{var t=localStorage.getItem("bitsoup-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=9962f7db"><script defer src="../assets/site.js?v=9962f7db"></script></head>
+<body>
+<header class="top"><a class="brand" href="../index.html">bitsoup <span>lab</span></a>
+<nav><a href="../index.html">Overview</a><a href="index.html" aria-current="page">Days</a><a href="../experiments/index.html">Experiments</a><a href="../land.html">Land</a><a href="../claims.html">Claims</a><a href="../search/index.html">Search</a><a href="../cluster.html">Cluster</a><a href="../journal.html">Journal</a><a href="../methods/index.html">Methods</a><a href="../data/index.html">Data</a></nav>
+<button class="theme" type="button" aria-label="Light or dark">◐</button></header>
+<main class="page">
+<p class="crumbs"><a href="index.html">Days</a> / 2026-11-15</p>
+<h1>15 November 2026</h1>
+<p class="lede">The sun world, fifth start, started on 12 November 2026, stood still all day: none of its nodes was running.</p>
+<h2 id="found-and-decided">Found and decided</h2>
+<p>Found at 14:21 UTC: both rigs out of reach for 15 minutes: by their own readings they ran on, and the fault lay on the way to them.</p>
+<h2 id="the-machines">The machines</h2>
+<p>Rig A was read for 24.0 h, from 00:00 to 23:59 UTC; its world was not running for 24.0 h of that. It wrote 312 GB to its drives, its cards drew 6.3 kWh, its CPUs were 50% busy.</p>
+<p>Rig B was read for 24.0 h, from 00:00 to 23:59 UTC; its world was not running for 24.0 h of that. It wrote 193 GB to its drives, its cards drew 3.9 kWh, its CPUs were 42% busy.</p>
+<h2 id="journal">The journal of the day</h2>
+<ol class="timeline"><li class="ev note" id="j-a-check-site-1794756508821"><time datetime="2026-11-15T15:28:28Z">Nov 15 15:28 UTC</time><span class="kind">note</span><div class="what"><strong>Publishing again, after one build held back since 15:14 UTC</strong><p>The check before publishing passes again.</p>
+<span class="meta"><a href="../experiments/sun-5.html">sun-5</a> · the check before publishing</span></div></li><li class="ev note" id="j-a-check-site-1794755690586"><time datetime="2026-11-15T15:14:50Z">Nov 15 15:14 UTC</time><span class="kind">note</span><div class="what"><strong>Publishing held back: one problem on land.html</strong><p>The check before publishing found:</p>
+<ul>
+<li>land.html at phone width: loading the page: no answer in 30 s</li>
+</ul>
+<p>The last good build stays up until a build passes.</p>
+<span class="meta"><a href="../experiments/sun-5.html">sun-5</a> · the check before publishing</span></div></li><li class="ev finding" id="j-2026-11-15T1421-both-rigs-out-of-reach-for-15-minutes-by-their-o"><time datetime="2026-11-15T14:21:00Z">Nov 15 14:21 UTC</time><span class="kind">finding</span><div class="what"><strong>Both rigs out of reach for 15 minutes: by their own readings they ran on, and the fault lay on the way to them</strong><p>From 13:48 to 14:02 UTC on 15 November the control PC reached neither rig, and the alarm said of both that they do not answer. The samplers on the rigs kept writing a reading a minute meanwhile, and those readings arrived afterwards. They show both machines running on as before: the same load on processors and cards, the cards at 48 to 64 degrees, not one bus error counted, and each rig's network port receiving and sending about one to two megabytes in nearly every minute, as in the hours before, which is the two rigs talking to each other. So neither rig A's network chip nor rig B's chipset link failed this time, as they had on 12 November. What failed lay between the control PC and the two rigs, and the readings do not say which piece. In the last minute before the silence a copy of 135 MB ran from rig A to the PC over that path and arrived whole. Both machines were restarted by hand at about 13:58 UTC, after ten minutes of silence, and answered again from 14:02. Whether the restart or something else brought the path back is not known. The restart was hard: each sampler's file of the day ended in a torn line, which was cut off before the samplers were started again at 14:14 UTC, so between 13:57 and 14:14 the machines' readings are five minutes apart instead of one. While the rigs were not read, the overview called the halted fifth start &quot;Running now&quot; and showed the speed of its last round. That is mended: a world that stood still when it was last read stays halted, and its page says that it is not being read.</p>
+<span class="meta">TRACKING</span></div></li><li class="ev recovery" id="j-a-alarms-rig-b-1794751385224"><time datetime="2026-11-15T14:03:05Z">Nov 15 14:03 UTC</time><span class="kind">recovery</span><div class="what"><strong>rig B answers again</strong><p>After 15 minutes: rig B does not answer.</p>
+<span class="meta"><a href="../experiments/sun-5.html">sun-5</a> · rig B round 577 · the stall alarm</span></div></li><li class="ev recovery" id="j-a-alarms-rig-a-1794751385224"><time datetime="2026-11-15T14:03:05Z">Nov 15 14:03 UTC</time><span class="kind">recovery</span><div class="what"><strong>rig A answers again</strong><p>After 15 minutes: rig A does not answer.</p>
+<span class="meta"><a href="../experiments/sun-5.html">sun-5</a> · rig A round 505 · the stall alarm</span></div></li><li class="ev alarm" id="j-a-alarms-rig-b-1794751100966"><time datetime="2026-11-15T13:58:20Z">Nov 15 13:58 UTC</time><span class="kind">alarm</span><div class="what"><strong>rig B does not answer</strong><p>The collector last reached it at 13:47 UTC, 10 minutes ago, and has tried every few minutes since.</p>
+<span class="meta"><a href="../experiments/sun-5.html">sun-5</a> · rig B round 577 · the stall alarm</span></div></li><li class="ev alarm" id="j-a-alarms-rig-a-1794751100966"><time datetime="2026-11-15T13:58:20Z">Nov 15 13:58 UTC</time><span class="kind">alarm</span><div class="what"><strong>rig A does not answer</strong><p>The collector last reached it at 13:47 UTC, 11 minutes ago, and has tried every few minutes since.</p>
+<span class="meta"><a href="../experiments/sun-5.html">sun-5</a> · rig A round 505 · the stall alarm</span></div></li><li class="ev note" id="j-a-check-site-1794724092637"><time datetime="2026-11-15T06:28:12Z">Nov 15 06:28 UTC</time><span class="kind">note</span><div class="what"><strong>Publishing again, after one build held back since 06:17 UTC</strong><p>The check before publishing passes again.</p>
+<span class="meta"><a href="../experiments/sun-5.html">sun-5</a> · the check before publishing</span></div></li><li class="ev note" id="j-a-check-site-1794723465577"><time datetime="2026-11-15T06:17:45Z">Nov 15 06:17 UTC</time><span class="kind">note</span><div class="what"><strong>Publishing held back: 6 problems on cluster.html, journal.html, methods/index.html and more</strong><p>The check before publishing found:</p>
+<ul>
+<li>cluster.html at phone width: loading the page: no answer in 30 s</li>
+<li>journal.html at phone width: loading the page: no answer in 30 s</li>
+<li>methods/index.html at phone width: loading the page: no answer in 30 s</li>
+<li>data/index.html at phone width: loading the page: no answer in 30 s</li>
+<li>experiments/sun-5.html at phone width: loading the page: no answer in 30 s</li>
+<li>days/2026-11-15.html at phone width: loading the page: no answer in 30 s</li>
+</ul>
+<p>The last good build stays up until a build passes.</p>
+<span class="meta"><a href="../experiments/sun-5.html">sun-5</a> · the check before publishing</span></div></li></ol>
+<p class="note">This page is written by the build from the journal, the readings and the tools' output; it is rewritten with every build. <a href="../claims.html">Claims</a> · <a href="../journal.html">Journal</a> · <a href="2026-11-14.html">← 2026-11-14</a> · <a href="2026-11-16.html">2026-11-16 →</a></p>
+</main>
+<footer class="foot">Built <time class="ago" datetime="2026-11-19T13:58:21Z">2026-11-19 13:58 UTC</time> · last reading from the rigs 2026-11-19 13:57 UTC · <a href="../data/index.html">data</a> · <a href="../methods/index.html">methods</a></footer>
+</body></html>
